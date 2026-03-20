@@ -1,6 +1,22 @@
 ---
 name: warpparse-log-engineering
 description: 面向大规模日志解析的 WarpParse 方案评估与工程落地。用于比较日志解析方案、判断 WarpParse 是否适合当前链路、规划 WP 工程初始化与部署 rollout、把具体 WPL 编写任务路由到正确工作流，以及整理有效的排障与支持材料。
+triggers:
+  - 日志解析方案选型或对比
+  - WarpParse 适用性评估
+  - 日志工程化部署规划
+  - WPL 编写入口路由
+  - 日志解析排障与支持
+dependencies:
+  optional:
+    - wproj
+    - wparse
+    - wpgen
+    - wpl-check
+  docs:
+    - docs.warpparse.ai
+    - editor.warpparse.ai
+    - https://github.com/wp-labs
 ---
 
 # WarpParse 日志工程化

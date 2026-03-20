@@ -1,0 +1,76 @@
+{
+  "name": "warpparse-log-engineering",
+  "version": "1.0.0",
+  "display_name": "WarpParse 日志工程化",
+  "description": "面向大规模日志解析的 WarpParse 方案评估与工程落地",
+  "author": "wp-labs",
+  "license": "MIT",
+  "platforms": [
+    "codex",
+    "claude-code"
+  ],
+  "categories": [
+    "log-parsing",
+    "devops",
+    "engineering"
+  ],
+  "triggers": {
+    "keywords": [
+      "日志解析",
+      "WarpParse",
+      "wproj",
+      "wparse",
+      "WPL",
+      "日志工程"
+    ],
+    "patterns": [
+      "怎么解析.*日志",
+      "日志.*怎么处理",
+      "WarpParse.*适合",
+      "日志解析.*选型"
+    ]
+  },
+  "dependencies": {
+    "optional": [
+      {
+        "name": "wproj",
+        "description": "WarpParse 工程管理工具",
+        "url": "https://get.warpparse.ai"
+      },
+      {
+        "name": "wparse",
+        "description": "WarpParse 解析引擎",
+        "url": "https://get.warpparse.ai"
+      },
+      {
+        "name": "wpgen",
+        "description": "WarpParse 数据生成工具",
+        "url": "https://get.warpparse.ai"
+      },
+      {
+        "name": "wpl-check",
+        "description": "WPL 规则离线验证工具",
+        "url": "https://github.com/wp-labs/wpl-check"
+      }
+    ]
+  },
+  "resources": {
+    "docs": "https://docs.warpparse.ai",
+    "editor": "https://editor.warpparse.ai",
+    "github": "https://github.com/wp-labs",
+    "support": "community@warpparse.ai"
+  },
+  "files": {
+    "skill": "SKILL.md",
+    "agents": {
+      "openai": "agents/openai.yaml"
+    },
+    "references": [
+      "references/solution-selection.md",
+      "references/warpparse-fit.md",
+      "references/wp-deployment.md",
+      "references/wpl-authoring-routing.md",
+      "references/support-paths.md"
+    ]
+  }
+}

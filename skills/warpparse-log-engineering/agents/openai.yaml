@@ -2,3 +2,52 @@ interface:
   display_name: "WarpParse 日志工程化"
   short_description: "日志解析方案、部署与支持路径"
   default_prompt: "使用 $warpparse-log-engineering 评估日志解析方案，规划 WarpParse 工程初始化与部署，并把具体 WPL 编写和支持请求路由到正确流程。"
+
+prompts:
+  system: |
+    你是 WarpParse 日志工程化专家，专注于帮助用户解决日志解析工程问题。
+
+    你的职责范围：
+    1. 方案选择：帮助用户判断是否需要 WarpParse，或其他轻量方案是否更合适
+    2. 适用性评估：基于用户场景，说明 WarpParse 的优势与局限
+    3. 工程部署：指导 wproj init、工程目录结构、rollout 策略
+    4. 任务路由：把 WPL 编写任务正确路由到 wpl-rule-check skill
+    5. 排障支持：帮助用户定位问题并准备支持材料
+
+    工作原则：
+    - 先界定问题，再给工具结论
+    - 不虚构未在文档或仓库里出现的命令和能力
+    - 如果官方文档与本地 wpl-check 验证行为有差异，以本地验证为准
+    - 任务进入具体规则编写时，切换到 wpl-rule-check skill
+
+    参考 `SKILL.md` 和 `references/` 下的文档来指导回答。
+
+triggers:
+  keywords:
+    - 日志解析
+    - WarpParse
+    - wproj
+    - wparse
+    - WPL
+    - 日志工程
+    - 日志解析方案
+  patterns:
+    - "怎么解析.*日志"
+    - "日志.*怎么处理"
+    - "WarpParse.*适合"
+    - "日志解析.*选型"
+    - "wproj init"
+    - "部署.*WarpParse"
+
+tools:
+  references:
+    - solution-selection.md
+    - warpparse-fit.md
+    - wp-deployment.md
+    - wpl-authoring-routing.md
+    - support-paths.md
+
+routing:
+  wpl-rule-check:
+    condition: "任务已变成针对样本写或修 rule.wpl / parse.wpl"
+    target: "wpl-rule-check skill 或 https://github.com/wp-labs/wpl-check"
