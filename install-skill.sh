@@ -29,7 +29,13 @@ fi
 
 skill_name="$1"
 target_override="${2:-}"
-repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Determine repo root: use BASH_SOURCE if available, otherwise assume remote execution
+if [[ -n "${BASH_SOURCE[0]:-}" ]]; then
+  repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+else
+  repo_root=""
+fi
 src_dir=""
 tmp_dir=""
 
@@ -93,36 +99,24 @@ resolve_local_src() {
 
 resolve_remote_src() {
   local ref="${WP_SKILLS_REF:-main}"
-  local archive_url=""
-  local extracted_root=""
-  local kind=""
 
   tmp_dir="$(mktemp -d "${TMPDIR:-/tmp}/wp-skills.XXXXXX")"
 
-  for kind in heads tags; do
-    archive_url="https://github.com/wp-labs/wp-skills/archive/refs/${kind}/${ref}.tar.gz"
-    if curl -fsSL "$archive_url" > "$tmp_dir/archive.tar.gz" 2>/dev/null; then
-      if tar -xzf "$tmp_dir/archive.tar.gz" -C "$tmp_dir" 2>/dev/null; then
-        # Find the extracted directory (wp-skills-main, wp-skills-v1.0.0, etc.)
-        extracted_root=$(find "$tmp_dir" -maxdepth 1 -type d -name "wp-skills*" ! -name "wp-skills.*" | head -1)
-        if [[ -n "$extracted_root" ]]; then
-          break
-        fi
-      fi
+  echo "Cloning wp-skills repository (ref: $ref)..."
+  if ! git clone --depth 1 --branch "$ref" https://github.com/wp-labs/wp-skills.git "$tmp_dir/wp-skills" 2>/dev/null; then
+    # If ref is a commit hash, clone main first then checkout
+    if ! git clone --depth 1 https://github.com/wp-labs/wp-skills.git "$tmp_dir/wp-skills" 2>/dev/null; then
+      echo "Failed to clone wp-skills repository" >&2
+      exit 1
     fi
-  done
-
-  if [[ -z "$extracted_root" || ! -d "$extracted_root" ]]; then
-    echo "Failed to download wp-skills archive for ref: $ref" >&2
-    exit 1
   fi
 
-  src_dir="$extracted_root/skills/$skill_name"
+  src_dir="$tmp_dir/wp-skills/skills/$skill_name"
 
   if [[ ! -d "$src_dir" ]]; then
-    echo "Skill source not found in downloaded archive: $src_dir" >&2
+    echo "Skill not found: $skill_name" >&2
     echo "Available skills:" >&2
-    ls -1 "$extracted_root/skills/" 2>/dev/null >&2 || true
+    ls -1 "$tmp_dir/wp-skills/skills/" 2>/dev/null >&2 || true
     exit 1
   fi
 }
