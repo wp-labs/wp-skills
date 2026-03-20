@@ -1,0 +1,4 @@
+interface:
+  display_name: "WarpParse 日志工程化"
+  short_description: "日志解析方案、部署与支持路径"
+  default_prompt: "使用 $warpparse-log-engineering 评估日志解析方案，规划 WarpParse 工程初始化与部署，并把具体 WPL 编写和支持请求路由到正确流程。"
