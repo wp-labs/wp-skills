@@ -101,11 +101,13 @@ resolve_remote_src() {
 
   for kind in heads tags; do
     archive_url="https://github.com/wp-labs/wp-skills/archive/refs/${kind}/${ref}.tar.gz"
-    if curl -fsSL "$archive_url" | tar -xzf - -C "$tmp_dir" 2>/dev/null; then
-      # Find the extracted directory (may have different naming)
-      extracted_root=$(find "$tmp_dir" -maxdepth 1 -type d -name "wp-skills*" | head -1)
-      if [[ -n "$extracted_root" ]]; then
-        break
+    if curl -fsSL "$archive_url" > "$tmp_dir/archive.tar.gz" 2>/dev/null; then
+      if tar -xzf "$tmp_dir/archive.tar.gz" -C "$tmp_dir" 2>/dev/null; then
+        # Find the extracted directory (wp-skills-main, wp-skills-v1.0.0, etc.)
+        extracted_root=$(find "$tmp_dir" -maxdepth 1 -type d -name "wp-skills*" ! -name "wp-skills.*" | head -1)
+        if [[ -n "$extracted_root" ]]; then
+          break
+        fi
       fi
     fi
   done
