@@ -76,6 +76,22 @@ bash <(curl -fsSL https://raw.githubusercontent.com/wp-labs/wp-skills/main/insta
 - `wpl-check sample`
 - 可直接复用的示例目录
 
+### wpl-check 常用命令
+
+```bash
+# 语法检查（自动检测模式）
+wpl-check syntax path/to/rule.wpl
+
+# 样本解析（默认使用 rule.wpl + sample.txt）
+wpl-check sample ./demo_dir
+
+# 内联样本快速验证
+wpl-check sample --data '{"key":"value"}' rule.wpl
+
+# Package 多规则选择
+wpl-check sample --package --rule-name rule_name rule.wpl sample.txt
+```
+
 ## 差异处理原则
 
 官方文档是学习入口，`wpl-check` 工具链是验证入口。
