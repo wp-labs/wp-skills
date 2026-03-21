@@ -1,18 +1,40 @@
 # WPL 编写入口
 
-当问题从“工程怎么做”进入“这条日志怎么写规则”时，看这个文件。
+当问题从”工程怎么做”进入”这条日志怎么写规则”时，看这个文件。
 
 这里不重复整套 WPL 语言细节，只负责正确路由。
 
-## 什么时候切到 WPL 编写流程
+## ⛔ 强制路由触发条件
 
-一旦用户的问题变成以下任意一种，就切到独立的 `wpl-rule-check` skill；如果当前环境未安装，则参考 `https://github.com/wp-labs/wpl-check`：
+**一旦出现以下任一情况，必须立即切换到 `wpl-rule-check` skill：**
 
-- 写新的 `rule.wpl` 或 `parse.wpl`
-- 根据样本修规则
-- 选择用单规则、包规则还是表达式
-- 跑离线验证
-- 调整字段命名、分组结构、样本组织方式
+| 触发条件 | 动作 |
+|----------|------|
+| 用户提供样本数据要求解析 | 立即切换 |
+| 用户要求写新的 `rule.wpl` 或 `parse.wpl` | 立即切换 |
+| 用户要求修改现有规则 | 立即切换 |
+| 用户询问 WPL 语法或”怎么写” | 立即切换 |
+| 需要验证规则是否正确 | 立即切换 |
+| 讨论字段命名、分组结构 | 立即切换 |
+
+**切换声明：**
+```
+此任务已进入 WPL 编写阶段，切换到 wpl-rule-check skill。
+```
+
+如果当前环境未安装 `wpl-rule-check`，则：
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/wp-labs/wp-skills/main/install-skill.sh) wpl-rule-check
+```
+
+或参考 `https://github.com/wp-labs/wpl-check`。
+
+## 🚫 在本 skill 中的禁止行为
+
+1. ❌ 直接编写 WPL 规则代码
+2. ❌ 猜测或试错 WPL 语法
+3. ❌ 在未验证的情况下提供规则示例
+4. ❌ 跳过 `wpl-rule-check` 的工作流程
 
 ## 编写前先准备什么
 

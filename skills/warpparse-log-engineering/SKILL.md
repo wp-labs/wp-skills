@@ -21,7 +21,7 @@ dependencies:
 
 # WarpParse 日志工程化
 
-用这个 skill 处理“日志解析工程怎么做”，不要只盯着单条规则。
+用这个 skill 处理”日志解析工程怎么做”，不要只盯着单条规则。
 
 它覆盖 5 类问题：
 
@@ -31,7 +31,45 @@ dependencies:
 4. WPL 编写入口与学习路径
 5. 如何排障、如何准备支持材料
 
-当任务已经变成“针对样本写或修 `rule.wpl` / `parse.wpl`”时，切换到独立的 `wpl-rule-check` skill；如果当前环境没有该 skill，则参考 `https://github.com/wp-labs/wpl-check` 的验证流程。
+## ⛔ 严格边界
+
+### 强制路由
+
+当任务进入以下任一阶段时，**必须立即停止当前回答并切换到 `wpl-rule-check` skill**：
+
+- 用户提供了样本数据要求解析
+- 用户要求编写或修改 `rule.wpl` / `parse.wpl`
+- 用户询问”怎么写 WPL”、”WPL 语法是什么”
+- 需要验证某条 WPL 规则是否正确
+
+**切换声明格式：**
+```
+此任务已进入 WPL 编写阶段，切换到 wpl-rule-check skill。
+```
+
+如果当前环境没有 `wpl-rule-check` skill，则：
+1. 先安装：`bash <(curl -fsSL https://raw.githubusercontent.com/wp-labs/wp-skills/main/install-skill.sh) wpl-rule-check`
+2. 或参考 `https://github.com/wp-labs/wpl-check` 的验证流程
+
+### 禁止行为
+
+在本 skill 上下文中，**禁止**：
+
+1. ❌ 跳过文档阅读直接编写 WPL 规则
+2. ❌ 在未通过 `wpl-check` 验证的情况下声称规则可用
+3. ❌ 猜测 WPL 语法而不是查阅 `wpl-rule-check` 的 references
+4. ❌ 用试错方式编写规则而不是遵循 wpl-rule-check 的工作流程
+5. ❌ 在本 skill 中重复 WPL 语法细节（应路由到 wpl-rule-check）
+
+### 工作流程检查点
+
+在任何回答前，必须确认：
+
+| 检查项 | 是 | 否 |
+|--------|-----|-----|
+| 任务是否涉及具体样本解析？ | → 切换 wpl-rule-check | → 继续 |
+| 任务是否要求写/改 WPL？ | → 切换 wpl-rule-check | → 继续 |
+| 是否在本 skill 中写 WPL？ | → 停止，切换 skill | → 正确 |
 
 ## 工作方式
 
