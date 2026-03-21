@@ -3,23 +3,28 @@ set -euo pipefail
 
 usage() {
   cat <<EOF
-Usage: $0 <skill-name> [target-dir]
+Usage: $0 <skill-name> [options]
 
 Install a skill from wp-skills repository or other supported sources.
 
 Arguments:
   skill-name    Name of the skill to install (e.g., warpparse-log-engineering)
-  target-dir    Target directory for the skill (default: auto-detect platform)
+
+Options:
+  --codex           Install to Codex CLI (~/.codex/skills/)
+  --claude          Install to Claude Code (~/.claude/skills/)
+  --all             Install to all available platforms (default)
+  --dir <path>      Install to custom directory
 
 Environment:
-  WP_SKILLS_REF   Branch or tag to install from (default: main)
-  WP_SKILLS_PLATFORM  Force platform: codex, claude-code, or auto (default: auto)
-  WP_SKILLS_SOURCE   Custom source repo URL (default: wp-labs/wp-skills)
+  WP_SKILLS_REF       Branch or tag to install from (default: main)
+  WP_SKILLS_SOURCE    Custom source repo (default: wp-labs/wp-skills)
 
 Examples:
   $0 warpparse-log-engineering
-  $0 warpparse-log-engineering ~/.claude/skills
-  WP_SKILLS_REF=v1.0.0 $0 warpparse-log-engineering
+  $0 warpparse-log-engineering --claude
+  $0 wpl-rule-check --all
+  $0 warpparse-log-engineering --dir ~/my-skills
 
 Supported skill sources:
   - wp-skills repo (default): warpparse-log-engineering, etc.
@@ -27,15 +32,61 @@ Supported skill sources:
 EOF
 }
 
-if [[ $# -lt 1 ]]; then
+# Parse arguments
+skill_name=""
+target_dirs=()
+install_all=false
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    --codex)
+      target_dirs+=("$HOME/.codex/skills")
+      shift
+      ;;
+    --claude)
+      target_dirs+=("$HOME/.claude/skills")
+      shift
+      ;;
+    --all)
+      install_all=true
+      shift
+      ;;
+    --dir)
+      if [[ -z "${2:-}" ]]; then
+        echo "Error: --dir requires a path argument" >&2
+        exit 2
+      fi
+      target_dirs+=("$2")
+      shift 2
+      ;;
+    -*)
+      echo "Error: Unknown option $1" >&2
+      usage
+      exit 2
+      ;;
+    *)
+      if [[ -z "$skill_name" ]]; then
+        skill_name="$1"
+      else
+        echo "Error: Unexpected argument $1" >&2
+        usage
+        exit 2
+      fi
+      shift
+      ;;
+  esac
+done
+
+if [[ -z "$skill_name" ]]; then
   usage
   exit 2
 fi
 
-skill_name="$1"
-target_override="${2:-}"
-
-# Determine repo root: use BASH_SOURCE if available, otherwise assume remote execution
+# Determine repo root
 if [[ -n "${BASH_SOURCE[0]:-}" ]]; then
   repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 else
@@ -49,49 +100,43 @@ cleanup() {
     rm -rf "$tmp_dir"
   fi
 }
-
 trap cleanup EXIT
 
-detect_platform() {
-  local platform="${WP_SKILLS_PLATFORM:-auto}"
+# Auto-detect available platforms if no explicit targets
+if [[ ${#target_dirs[@]} -eq 0 ]]; then
+  if [[ "$install_all" == "true" ]] || [[ -z "${WP_SKILLS_PLATFORM:-}" ]]; then
+    # Install to all available platforms
+    [[ -d "$HOME/.codex/skills" ]] && target_dirs+=("$HOME/.codex/skills")
+    [[ -d "$HOME/.claude/skills" ]] && target_dirs+=("$HOME/.claude/skills")
 
-  if [[ "$platform" != "auto" ]]; then
-    echo "$platform"
-    return
-  fi
-
-  # Auto-detect based on existing directories
-  if [[ -d "$HOME/.claude/skills" ]]; then
-    echo "claude-code"
-  elif [[ -d "$HOME/.codex/skills" ]]; then
-    echo "codex"
+    # If no platform directories exist, create default
+    if [[ ${#target_dirs[@]} -eq 0 ]]; then
+      target_dirs+=("$HOME/.claude/skills")
+    fi
   else
-    # Default to claude-code as it's more common
-    echo "claude-code"
+    # Respect WP_SKILLS_PLATFORM for backward compatibility
+    case "${WP_SKILLS_PLATFORM:-auto}" in
+      codex)
+        target_dirs+=("$HOME/.codex/skills")
+        ;;
+      claude-code)
+        target_dirs+=("$HOME/.claude/skills")
+        ;;
+      auto)
+        if [[ -d "$HOME/.claude/skills" ]]; then
+          target_dirs+=("$HOME/.claude/skills")
+        elif [[ -d "$HOME/.codex/skills" ]]; then
+          target_dirs+=("$HOME/.codex/skills")
+        else
+          target_dirs+=("$HOME/.claude/skills")
+        fi
+        ;;
+      *)
+        target_dirs+=("$HOME/.claude/skills")
+        ;;
+    esac
   fi
-}
-
-get_target_dir() {
-  if [[ -n "$target_override" ]]; then
-    echo "$target_override/$skill_name"
-    return
-  fi
-
-  local platform
-  platform=$(detect_platform)
-
-  case "$platform" in
-    codex)
-      echo "$HOME/.codex/skills/$skill_name"
-      ;;
-    claude-code)
-      echo "$HOME/.claude/skills/$skill_name"
-      ;;
-    *)
-      echo "$HOME/.claude/skills/$skill_name"
-      ;;
-  esac
-}
+fi
 
 resolve_local_src() {
   local candidate="$repo_root/skills/$skill_name"
@@ -105,6 +150,7 @@ resolve_local_src() {
 resolve_remote_src() {
   local ref="${WP_SKILLS_REF:-main}"
   local source_repo="${WP_SKILLS_SOURCE:-}"
+  local skill_subdir="skills/$skill_name"
 
   # Auto-detect source repo based on skill name
   if [[ -z "$source_repo" ]]; then
@@ -124,7 +170,6 @@ resolve_remote_src() {
 
   echo "Cloning $source_repo (ref: $ref)..."
   if ! git clone --depth 1 --branch "$ref" "https://github.com/$source_repo.git" "$tmp_dir/repo" 2>/dev/null; then
-    # If ref is a commit hash, clone main first then checkout
     if ! git clone --depth 1 "https://github.com/$source_repo.git" "$tmp_dir/repo" 2>/dev/null; then
       echo "Failed to clone $source_repo" >&2
       exit 1
@@ -141,23 +186,36 @@ resolve_remote_src() {
   fi
 }
 
-# Main
+# Resolve source
 if ! resolve_local_src; then
   echo "Fetching skill from GitHub (ref: ${WP_SKILLS_REF:-main})..."
   resolve_remote_src
 fi
 
-dst_dir=$(get_target_dir)
-
-mkdir -p "$(dirname "$dst_dir")"
-rm -rf "$dst_dir"
-cp -R "$src_dir" "$dst_dir"
-
-platform=$(detect_platform)
+# Install to all target directories
 echo ""
-echo "Installed: $skill_name"
-echo "Platform:  $platform"
-echo "Location:  $dst_dir"
-echo ""
+for target_base in "${target_dirs[@]}"; do
+  dst_dir="$target_base/$skill_name"
+
+  mkdir -p "$target_base"
+  rm -rf "$dst_dir"
+  cp -R "$src_dir" "$dst_dir"
+
+  # Detect platform name for display
+  platform="custom"
+  case "$target_base" in
+    */.codex/skills) platform="codex" ;;
+    */.claude/skills) platform="claude-code" ;;
+  esac
+
+  echo "Installed: $skill_name"
+  echo "Platform:  $platform"
+  echo "Location:  $dst_dir"
+  echo ""
+done
+
 echo "Files installed:"
-find "$dst_dir" -type f | sed 's|'"$dst_dir"'||' | sed 's|^/|  - |'
+find "$dst_dir" -type f 2>/dev/null | sed 's|'"$dst_dir"'||' | sed 's|^/|  - |' | head -20
+if [[ $(find "$dst_dir" -type f | wc -l) -gt 20 ]]; then
+  echo "  ... and more"
+fi
