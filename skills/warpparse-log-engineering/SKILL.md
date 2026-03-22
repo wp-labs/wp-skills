@@ -81,6 +81,7 @@ dependencies:
    - 谁维护规则、谁承担线上责任
 2. 再选当前轨道：
    - 从零开始配置项目：`references/wp-quickstart.md`
+   - CLI 工具使用方法：`references/wp-cli-tools.md`
    - 方案选择：`references/solution-selection.md`
    - WarpParse 适配性与价值：`references/warpparse-fit.md`
    - WP 初始化、运行与 rollout：`references/wp-deployment.md`

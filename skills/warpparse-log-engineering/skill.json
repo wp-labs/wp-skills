@@ -72,6 +72,7 @@
     },
     "references": [
       "references/wp-quickstart.md",
+      "references/wp-cli-tools.md",
       "references/solution-selection.md",
       "references/warpparse-fit.md",
       "references/wp-deployment.md",
