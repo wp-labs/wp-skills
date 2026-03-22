@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wparse:*)",
+      "Bash(wpl-check:*)",
+      "Bash(wproj:*)",
+      "Bash(wpgen:*)"
+    ]
+  }
+}
