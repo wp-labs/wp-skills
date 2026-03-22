@@ -21,13 +21,18 @@
       "wproj",
       "wparse",
       "WPL",
-      "日志工程"
+      "日志工程",
+      "从零开始",
+      "初始化项目"
     ],
     "patterns": [
       "怎么解析.*日志",
       "日志.*怎么处理",
       "WarpParse.*适合",
-      "日志解析.*选型"
+      "日志解析.*选型",
+      "如何.*开始",
+      "从.*开始.*配置",
+      "初始化.*项目"
     ]
   },
   "dependencies": {
@@ -66,6 +71,7 @@
       "openai": "agents/openai.yaml"
     },
     "references": [
+      "references/wp-quickstart.md",
       "references/solution-selection.md",
       "references/warpparse-fit.md",
       "references/wp-deployment.md",
