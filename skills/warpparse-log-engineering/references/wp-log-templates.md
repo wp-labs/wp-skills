@@ -24,11 +24,13 @@ rule nginx_clf {
     http/status:status,
     digit:bytes,
     chars:referer",
-    http/agent:user_agent",
+    chars:user_agent",
     chars:xff"
   )
 }
 ```
+
+> **注意：** User-Agent 字段建议使用 `chars` 而非 `http/agent`。`http/agent` 类型仅匹配浏览器 User-Agent（如 `Mozilla/5.0`），无法匹配非浏览器客户端如 `curl/7.68.0`、`PostmanRuntime/7.29`、`python-requests/2.28.0` 等，会导致解析失败。
 
 **输出字段：**
 
@@ -40,7 +42,7 @@ rule nginx_clf {
 | status | digit | 状态码 |
 | bytes | digit | 响应字节数 |
 | referer | chars | 来源页面 |
-| user_agent | http/agent | 用户代理 |
+| user_agent | chars | 用户代理 |
 | xff | chars | X-Forwarded-For |
 
 ---
@@ -89,7 +91,7 @@ rule apache_combined {
     http/status:status,
     digit:bytes,
     chars:referer",
-    http/agent:user_agent"
+    chars:user_agent"
   )
 }
 ```
@@ -345,6 +347,24 @@ wpl-check sample .
 | 解析失败 | 检查分隔符、格式 |
 | 字段类型错误 | 使用更通用的类型 |
 | 残留数据 | 检查最后的 `\0` |
+| User-Agent 解析失败 | 使用 `chars` 替代 `http/agent` |
+
+### 5. 类型选择注意事项
+
+#### `http/agent` vs `chars`
+
+`http/agent` 类型仅匹配浏览器 User-Agent 格式（以 `Mozilla/` 开头），以下情况会解析失败：
+
+```
+# 解析失败示例
+"curl/7.68.0"
+"PostmanRuntime/7.29"
+"python-requests/2.28.0"
+"Go-http-client/1.1"
+"axios/0.21.1"
+```
+
+**推荐做法：** 日志中的 User-Agent 字段统一使用 `chars` 类型，确保所有客户端都能正确解析。
 
 ---
 
