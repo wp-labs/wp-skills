@@ -86,6 +86,7 @@ dependencies:
    - 连接器配置：`references/wp-connectors.md`
    - 常见日志模板：`references/wp-log-templates.md`
    - 监控运维指南：`references/wp-operations.md`
+   - 错误排查指南：`references/wp-troubleshooting.md`
    - 方案选择：`references/solution-selection.md`
    - WarpParse 适配性与价值：`references/warpparse-fit.md`
    - WP 初始化、运行与 rollout：`references/wp-deployment.md`

@@ -104,6 +104,43 @@ params = {
 tags = ["type:access", "env:prod"]
 ```
 
+### 文件源路径配置详解
+
+**路径拼接规则**：`{base}/{file}`
+
+| 参数 | 说明 | 示例 |
+|------|------|------|
+| `base` | 目录路径（相对于工程根目录） | `./data/in_dat` |
+| `file` | 文件名（不含路径） | `nginx_access.dat` |
+
+**正确示例**：
+
+```toml
+# 实际路径: ./data/in_dat/nginx_access.dat
+[sources.params]
+base = "./data/in_dat"
+file = "nginx_access.dat"
+```
+
+**常见错误**：
+
+| 错误配置 | 问题 | 正确配置 |
+|----------|------|----------|
+| `file = "data/in_dat/nginx.dat"` | file 不应包含路径 | `base = "./data/in_dat"`, `file = "nginx.dat"` |
+| `base = "./data/in_dat/nginx.dat"` | base 应是目录不是文件 | `base = "./data/in_dat"`, `file = "nginx.dat"` |
+| `base = "data/in_dat"` | 缺少 `./` 前缀 | `base = "./data/in_dat"` |
+| `base = "/abs/path"` | 绝对路径可用但不推荐 | 使用相对路径 `./data/in_dat` |
+
+**路径验证方法**：
+
+```bash
+# 在工程根目录下验证
+ls -la ./data/in_dat/nginx_access.dat
+
+# 或拼接验证
+ls -la {base}/{file}
+```
+
 ### Syslog 源示例
 
 ```toml

@@ -191,6 +191,205 @@ cat models/wpl/my_log_type/parse.wpl
 | 5. 解析 | `wparse batch` | 无错误 |
 | 6. 结果 | `wproj data stat` | 成功率 > 95% |
 
+---
+
+## 完整示例：Nginx 访问日志解析
+
+以下是一个从零开始的完整 nginx 日志解析示例。
+
+### 1. 初始化项目
+
+```bash
+# 创建项目目录
+mkdir -p ~/wp-projects/nginx-demo
+cd ~/wp-projects/nginx-demo
+
+# 初始化完整项目
+wproj init -m full
+
+# 验证结构
+wproj check
+```
+
+### 2. 准备 WPL 规则
+
+```bash
+# 创建 nginx 规则目录
+mkdir -p models/wpl/nginx
+```
+
+创建 `models/wpl/nginx/parse.wpl`：
+
+```wpl
+package /nginx/ {
+  rule access {
+    (
+      ip:client_ip,
+      2*_,
+      time/clf:timestamp<[,]>,
+      http/request:request",
+      http/status:status,
+      digit:bytes,
+      chars:referer",
+      chars:user_agent",
+      chars:xff"
+    )
+  }
+}
+```
+
+创建 `models/wpl/nginx/sample.dat`（样本数据）：
+
+```
+192.168.1.10 - - [21/Mar/2025:01:40:02 +0800] "GET /api/user HTTP/1.1" 200 1234 "http://example.com/" "Mozilla/5.0 Chrome/90" "-"
+10.0.0.5 - admin [21/Mar/2025:02:15:33 +0800] "POST /login HTTP/1.1" 302 512 "http://example.com/login" "curl/7.68.0" "203.0.113.50"
+172.16.0.100 - - [21/Mar/2025:03:22:11 +0800] "GET /static/logo.png HTTP/1.1" 304 0 "http://example.com/" "Mozilla/5.0 Safari/537.36" "-"
+```
+
+### 3. 验证规则
+
+```bash
+# 检查语法
+wpl-check syntax models/wpl/nginx/parse.wpl
+
+# 验证样本（注意：只验证第一条）
+wpl-check sample models/wpl/nginx/parse.wpl models/wpl/nginx/sample.dat
+```
+
+**预期输出：**
+```
+source: ok (package /nginx/, 1 rules)
+
+data: ok (package /nginx/ / rule access, 8 fields, XXX bytes residue)
+
+NO:1          [ip              ] client_ip            : 192.168.1.10
+NO:4          [time            ] timestamp            : 2025-03-21 01:40:02
+NO:5          [http/request    ] request              : GET /api/user HTTP/1.1
+NO:6          [digit           ] status               : 200
+NO:7          [digit           ] bytes                : 1234
+NO:8          [chars           ] referer              : http://example.com/
+NO:9          [chars           ] user_agent           : Mozilla/5.0 Chrome/90
+NO:10         [chars           ] xff                  : -
+```
+
+### 4. 配置数据源
+
+编辑 `topology/sources/wpsrc.toml`：
+
+```toml
+[[sources]]
+key = "nginx_access"
+enable = true
+connect = "file_src"
+tags = ["type:nginx", "format:clf"]
+
+[sources.params]
+base = "./data/in_dat"
+encode = "text"
+file = "nginx_access.dat"
+
+# 禁用其他默认源
+[[sources]]
+key = "syslog_1"
+enable = false
+connect = "syslog_tcp_src"
+
+[[sources]]
+key = "file_1"
+enable = false
+connect = "file_src"
+```
+
+### 5. 准备测试数据
+
+```bash
+# 创建输入目录
+mkdir -p data/in_dat
+
+# 复制样本作为测试数据
+cp models/wpl/nginx/sample.dat data/in_dat/nginx_access.dat
+```
+
+### 6. 运行解析
+
+```bash
+# 清理旧数据
+wproj data clean
+
+# 运行批处理解析
+wparse batch --stat 2 -p
+```
+
+**预期输出：**
+```
+============================ total stat ==============================
+
++-------+------------+----------------+---------+-------+---------+----------+-------+
+| stage | name       | target         | collect | total | success | suc-rate | speed |
++====================================================================================+
+| Parse | parse_stat | /nginx//access |         | 3     | 3       | 100.0%   | 0.06  |
+|-------+------------+----------------+---------+-------+---------+----------+-------|
+| Pick  | pick_stat  | nginx_access   |         | 3     | 3       | 100.0%   | 0.50  |
+|-------+------------+----------------+---------+-------+---------+----------+-------|
+| Sink  | sink_stat  | demo/json      |         | 3     | 3       | 100.0%   | 0.25  |
++-------+------------+----------------+---------+-------+---------+----------+-------+
+```
+
+### 7. 查看解析结果
+
+```bash
+# 查看输出文件
+ls -la data/out_dat/
+
+# 查看解析后的 JSON
+cat data/out_dat/demo.json
+```
+
+**输出示例：**
+```json
+{
+  "client_ip": "192.168.1.10",
+  "timestamp": "2025-03-21 01:40:02",
+  "request": "GET /api/user HTTP/1.1",
+  "status": 200,
+  "bytes": 1234,
+  "referer": "http://example.com/",
+  "user_agent": "Mozilla/5.0 Chrome/90",
+  "xff": "-",
+  "wp_src_key": "nginx_access"
+}
+```
+
+### 8. 常见问题处理
+
+**问题：wpl-check sample 有 residue**
+
+```
+data: ok (..., 578 bytes residue)
+residue:
+10.0.0.5 - admin [21/Mar/2025:02:15:33 +0800] ...
+```
+
+**说明：** `wpl-check sample` 只验证第一条样本，residue 是剩余样本，属于正常行为。
+
+**问题：override not allowed**
+
+```
+Details: override not allowed
+```
+
+**解决：** 检查 `connectors/source.d/00-file_src.toml` 中的 `allow_override` 白名单，只覆写允许的参数。
+
+**问题：No such file or directory**
+
+```
+Details: No such file or directory (os error 2)
+```
+
+**解决：** 检查 `base` 和 `file` 配置，确保路径拼接正确：
+- 正确：`base = "./data/in_dat"`, `file = "nginx.dat"`
+- 错误：`file = "data/in_dat/nginx.dat"`（file 不应包含路径）
+
 ## 下一步
 
 - 接入真实数据源（Kafka、文件、Syslog 等）

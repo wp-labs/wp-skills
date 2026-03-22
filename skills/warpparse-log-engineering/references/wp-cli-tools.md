@@ -321,6 +321,124 @@ parallel = 4       # 并行 worker 数
 
 ---
 
+## wpl-check - WPL 规则验证工具
+
+WPL 规则语法检查和样本验证工具。
+
+### 命令概览
+
+```bash
+wpl-check <COMMAND>
+
+Commands:
+  syntax  检查 WPL 规则语法
+  sample  用样本数据验证规则
+```
+
+### syntax - 语法检查
+
+```bash
+wpl-check syntax <RULE_FILE>
+```
+
+**示例：**
+
+```bash
+# 检查规则语法
+wpl-check syntax models/wpl/nginx/parse.wpl
+
+# 输出示例
+source: ok (package nginx, 1 rules)
+```
+
+### sample - 样本验证
+
+```bash
+wpl-check sample <RULE_FILE> <SAMPLE_FILE>
+```
+
+**示例：**
+
+```bash
+# 验证规则对样本的解析效果
+wpl-check sample models/wpl/nginx/parse.wpl models/wpl/nginx/sample.dat
+```
+
+**输出示例：**
+
+```
+source: ok (package nginx, 1 rules)
+
+data: ok (package nginx / rule access, 8 fields, 0 bytes residue)
+
+NO:1          [ip              ] client_ip            : 192.168.1.10
+NO:3          [chars           ] user                 : -
+NO:4          [time            ] timestamp            : 2025-03-21 01:40:02
+NO:5          [http/request    ] request              : GET /api/user HTTP/1.1
+NO:6          [digit           ] status               : 200
+NO:7          [digit           ] bytes                : 1234
+NO:8          [chars           ] referer              : http://example.com/
+NO:9          [chars           ] user_agent           : Mozilla/5.0 Chrome/90
+NO:10         [chars           ] xff                  : -
+```
+
+### wpl-check sample 行为详解
+
+**重要**：`wpl-check sample` **只验证第一条样本**，不会遍历全部样本。
+
+#### 输出解读
+
+| 字段 | 含义 |
+|------|------|
+| `ok (8 fields, 0 bytes residue)` | 成功解析，8 个字段，无残留数据 |
+| `ok (8 fields, 578 bytes residue)` | 成功解析第一条，但样本文件还有 578 字节未处理 |
+| `residue:` | 显示未处理的剩余内容（即第二条及之后的样本） |
+
+#### residue 非空 ≠ 规则错误
+
+```
+data: ok (package nginx / rule access, 10 fields, 578 bytes residue)
+
+residue:
+10.0.0.5 - admin [21/Mar/2025:02:15:33 +0800] "POST /login HTTP/1.1" ...
+172.16.0.100 - - [21/Mar/2025:03:22:11 +0800] "GET /static/logo.png" ...
+```
+
+上述输出表示：
+- ✅ 第一条样本解析成功
+- ℹ️ 还有 2 条样本未验证（residue 部分）
+- ❌ **不代表规则有问题**
+
+#### 多样本验证方法
+
+**方法一：逐条验证**
+```bash
+# 只放一条样本
+cat > sample.dat << 'EOF'
+单条日志样本
+EOF
+wpl-check sample parse.wpl sample.dat
+```
+
+**方法二：批量测试（推荐）**
+```bash
+# 使用 wparse batch 批量解析
+wparse batch --stat 2 -p
+
+# 查看解析成功率
+wproj data stat
+```
+
+#### 常见问题
+
+| 场景 | 原因 | 解决 |
+|------|------|------|
+| residue 很大 | 样本文件有多条 | 正常，sample 只验证第一条 |
+| 字段数量不对 | 规则与样本不匹配 | 检查规则字段定义 |
+| 解析失败 | 规则语法或格式错误 | 用 `wpl-check syntax` 检查语法 |
+
+---
+
 ## 典型工作流程
 
 ### 本地开发验证

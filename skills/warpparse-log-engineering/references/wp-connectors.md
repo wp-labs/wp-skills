@@ -305,6 +305,42 @@ topic = "parsed-nginx"
 
 ## 排障指南
 
+### 查询可覆写参数
+
+在配置 `sources.params` 前，先确认哪些参数可以覆写：
+
+```bash
+# 查看文件源连接器定义
+cat connectors/source.d/00-file_src.toml
+
+# 输出示例：
+# [[connectors]]
+# id = "file_src"
+# type = "file"
+# allow_override = ["base", "file", "encode"]
+```
+
+**快速查询命令：**
+
+```bash
+# 查询所有 Source 连接器
+grep -A 3 "allow_override" connectors/source.d/*.toml
+
+# 查询特定连接器
+grep "allow_override" connectors/source.d/00-file_src.toml
+```
+
+**常见连接器 allow_override 一览：**
+
+| 连接器 ID | 可覆写参数 |
+|-----------|------------|
+| `file_src` | `base`, `file`, `encode` |
+| `kafka_src` | `topic`, `group_id`, `config` |
+| `syslog_udp_src` | `port`, `header_mode`, `prefer_newline` |
+| `tcp_src` | `port`, `framing`, `prefer_newline` |
+| `file_json_sink` | `base`, `file`, `fmt` |
+| `kafka_sink` | `topic`, `config`, `num_partitions`, `replication` |
+
 ### 连接器未找到
 
 ```bash
