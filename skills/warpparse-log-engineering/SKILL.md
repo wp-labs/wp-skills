@@ -82,6 +82,10 @@ dependencies:
 2. 再选当前轨道：
    - 从零开始配置项目：`references/wp-quickstart.md`
    - CLI 工具使用方法：`references/wp-cli-tools.md`
+   - 配置文件详解：`references/wp-config-reference.md`
+   - 连接器配置：`references/wp-connectors.md`
+   - 常见日志模板：`references/wp-log-templates.md`
+   - 监控运维指南：`references/wp-operations.md`
    - 方案选择：`references/solution-selection.md`
    - WarpParse 适配性与价值：`references/warpparse-fit.md`
    - WP 初始化、运行与 rollout：`references/wp-deployment.md`

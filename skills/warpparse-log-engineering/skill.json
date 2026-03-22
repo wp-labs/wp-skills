@@ -73,6 +73,10 @@
     "references": [
       "references/wp-quickstart.md",
       "references/wp-cli-tools.md",
+      "references/wp-config-reference.md",
+      "references/wp-connectors.md",
+      "references/wp-log-templates.md",
+      "references/wp-operations.md",
       "references/solution-selection.md",
       "references/warpparse-fit.md",
       "references/wp-deployment.md",
