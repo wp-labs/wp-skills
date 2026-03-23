@@ -61,6 +61,30 @@ bash install-skill.sh warpparse-log-engineering
 | `WP_SKILLS_REF` | Branch or tag to install | `main` |
 | `WP_SKILLS_PLATFORM` | Target platform: `codex`, `claude-code`, or `auto` | `auto` |
 
+## Versioning
+
+Repository release version is recorded in `version.txt`.
+
+Recommended release flow:
+
+1. Update `version.txt`
+2. Commit the change to `main`
+3. Create a matching tag: `v<version>`
+4. Push the tag to GitHub
+
+Example:
+
+```bash
+echo 0.1.1 > version.txt
+git add version.txt
+git commit -m "chore: release v0.1.1"
+git tag v0.1.1
+git push origin main
+git push origin v0.1.1
+```
+
+GitHub Actions will validate that the pushed tag matches `version.txt` and then create the release automatically.
+
 ## Supported Platforms
 
 - **Claude Code**: Installs to `~/.claude/skills/`

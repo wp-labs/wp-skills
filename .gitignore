@@ -1,2 +1,4 @@
 .DS_Store
 skills/wpl-rule-check/
+.report
+.run*

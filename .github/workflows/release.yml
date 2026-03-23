@@ -1,0 +1,61 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate tag against version.txt
+        id: version
+        shell: bash
+        run: |
+          version="$(tr -d '[:space:]' < version.txt)"
+
+          if [[ -z "$version" ]]; then
+            echo "::error::version.txt is empty"
+            exit 1
+          fi
+
+          expected_tag="v$version"
+          actual_tag="${GITHUB_REF_NAME}"
+
+          if [[ "$actual_tag" != "$expected_tag" ]]; then
+            echo "::error::Tag '$actual_tag' does not match version.txt ('$expected_tag')"
+            exit 1
+          fi
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=$actual_tag" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ steps.version.outputs.tag }}
+        shell: bash
+        run: |
+          if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+            echo "Release already exists for $TAG_NAME"
+            exit 0
+          fi
+
+          gh release create "$TAG_NAME" \
+            --verify-tag \
+            --title "wp-skills $TAG_NAME" \
+            --generate-notes
