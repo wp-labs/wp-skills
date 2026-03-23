@@ -82,6 +82,7 @@ dependencies:
 2. 再选当前轨道：
    - 从零开始配置项目：`references/wp-quickstart.md`
    - CLI 工具使用方法：`references/wp-cli-tools.md`
+   - 工程目录约定、运行时接线与批量验证：`references/wp-runtime-validation.md`
    - 配置文件详解：`references/wp-config-reference.md`
    - 连接器配置：`references/wp-connectors.md`
    - 常见日志模板：`references/wp-log-templates.md`
@@ -101,6 +102,9 @@ dependencies:
 
 - 把 `wproj`、`wpgen`、`wparse` 视为工程化落地工具链。
 - 把 `wpl-check` 视为离线编写和验证 WPL 的本地工具，不等同于整个 WarpParse 部署。
+- `wpl-check` 或 `wproj check` 通过，不等于 `wparse batch` 已经按运行时路径加载到目标规则。
+- 工程内优先使用目录化规则布局：`models/wpl/<name>/parse.wpl` 与 `models/wpl/<name>/sample.dat`。
+- 多样本或真实回归验证优先使用 `wparse batch`、`wproj data stat`、`miss.dat` 和 `error.dat`，不要把 `wpl-check sample` 当成批量通过证明。
 - 如果用户只是在学 WPL 语法，不要在这里重复整套语言细节，转到独立的 `wpl-rule-check` skill 或 `wpl-check` 仓库。
 - 如果官方文档示例与本地 `wpl-check` 验证行为有差异，以本地 `wpl-check` 可验证流程为准。
 - 不要虚构未在文档或仓库里出现的部署命令、控制面能力、支持渠道。

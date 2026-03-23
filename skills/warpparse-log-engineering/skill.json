@@ -1,8 +1,8 @@
 {
   "name": "warpparse-log-engineering",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "display_name": "WarpParse 日志工程化",
-  "description": "面向大规模日志解析的 WarpParse 方案评估与工程落地",
+  "description": "面向大规模日志解析的 WarpParse 方案评估、工程接线与批量验证闭环",
   "author": "wp-labs",
   "license": "MIT",
   "platforms": [
@@ -73,6 +73,7 @@
     "references": [
       "references/wp-quickstart.md",
       "references/wp-cli-tools.md",
+      "references/wp-runtime-validation.md",
       "references/wp-config-reference.md",
       "references/wp-connectors.md",
       "references/wp-log-templates.md",

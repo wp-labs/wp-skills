@@ -120,6 +120,8 @@ wproj data stat
 wproj data validate
 ```
 
+**注意：** 在部分工程布局里，`wproj data clean` 后需要重新恢复 `data/in_dat/` 下的测试输入。不要清理后直接跑 `wparse batch`，否则容易把“没有输入”误判成“规则不生效”。
+
 ---
 
 ## wparse - 解析引擎
@@ -245,7 +247,17 @@ wpgen sample -n 10000 -p
 
 # 生成 50000 条，速度 5000 行/秒
 wpgen sample -n 50000 -s 5000 --stat 5 -p
+
+# 基于某个规则目录下的 sample.dat 扩样
+wpgen sample --wpl models/wpl/nginx -n 10000 -p
 ```
+
+**重要行为约定：**
+
+- `wpgen sample --wpl <dir>` 会在 `<dir>` 下查找固定文件名 `sample.dat`
+- 如果目录中没有 `sample.dat`，当前版本可能只报 `[50041] configuration error << core config`
+- 默认是追加写输出，不是覆盖写
+- 因此批量回归前建议先清理旧输出，再明确检查输入文件是否被重建
 
 ### rule - 基于规则生成
 
@@ -382,6 +394,12 @@ NO:9          [chars           ] user_agent           : Mozilla/5.0 Chrome/90
 NO:10         [chars           ] xff                  : -
 ```
 
+**适用边界：**
+
+- `wpl-check sample` 主要用于单样本调试
+- 多条样本放在一个文件里时，后续内容更适合作为 residue 参考，而不是批量回归证明
+- 真实批量验证优先使用 `wparse batch` + `wproj data stat`
+
 ### wpl-check sample 行为详解
 
 **重要**：`wpl-check sample` **只验证第一条样本**，不会遍历全部样本。
@@ -450,14 +468,19 @@ wproj init -m full
 # 2. 检查配置
 wproj check
 
-# 3. 生成测试数据
-wpgen sample -n 3000 -p
+# 3. 清理旧输出
+wproj data clean
 
-# 4. 运行解析
+# 4. 恢复或生成测试数据
+cp models/wpl/nginx/sample.dat data/in_dat/nginx.dat
+
+# 5. 运行解析
 wparse batch --stat 2 -p
 
-# 5. 查看结果
+# 6. 查看结果
 wproj data stat
+sed -n '1,50p' data/out_dat/miss.dat
+sed -n '1,50p' data/out_dat/error.dat
 ```
 
 ### 清理重来
@@ -467,8 +490,8 @@ wproj data stat
 wproj data clean
 wpgen data clean
 
-# 重新开始
-wpgen sample -n 1000 -p
+# 重新恢复输入并开始
+cp models/wpl/nginx/sample.dat data/in_dat/nginx.dat
 wparse batch -p
 wproj data stat
 ```

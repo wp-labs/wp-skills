@@ -77,6 +77,24 @@ wproj sources list
 wproj check --what connectors
 ```
 
+### `wpgen sample --wpl ...` 报 core config error
+
+**错误信息：**
+```
+[50041] configuration error << core config
+```
+
+**优先检查：**
+
+```bash
+find models/wpl/kv_pairs -maxdepth 1 -type f
+```
+
+**说明：**
+
+- `wpgen sample --wpl <dir>` 会固定查找 `<dir>/sample.dat`
+- 如果缺少 `sample.dat`，当前版本可能只返回较笼统的 core config 错误
+
 ---
 
 ## 路径错误
@@ -131,6 +149,29 @@ ls -la models/wpl/
 # 检查 WPL 规则目录配置
 grep "wpl" conf/wparse.toml
 ```
+
+### `wpl-check` 通过但 `wparse batch` 不生效
+
+**现象：**
+
+- `wpl-check syntax` 通过
+- `wpl-check sample` 通过
+- `wparse batch` 后数据仍进入 `miss.dat`
+
+**优先排查：**
+
+```bash
+find models/wpl -maxdepth 2 -type f
+ls -la models/oml
+sed -n '1,200p' topology/sources/wpsrc.toml
+sed -n '1,50p' data/out_dat/miss.dat
+```
+
+**说明：**
+
+- 运行时优先使用 `models/wpl/<name>/parse.wpl` 与 `models/wpl/<name>/sample.dat`
+- 只把规则放在 `models/wpl/<name>.wpl` 顶层时，容易出现“离线可用、工程不生效”
+- 还要确认 OML、source、sink 已经把数据真正接到目标规则
 
 ---
 
@@ -205,6 +246,29 @@ head -5 data/out_dat/demo.json | jq .
 # 检查规则字段定义
 cat models/wpl/nginx/parse.wpl
 ```
+
+### 批量结果与输入不一致
+
+**现象：**
+
+- 输入条数看起来不对
+- 命中率和预期差很多
+- 输出混入旧数据
+
+**排查：**
+```bash
+wproj data clean
+wpgen data clean
+ls -la data/in_dat
+ls -la data/out_dat
+sed -n '1,20p' data/out_dat/miss.dat
+```
+
+**常见原因：**
+
+- `wpgen sample` 默认向旧文件追加写入
+- 清理后没有重新恢复输入文件
+- 只看 `wproj data stat`，没有检查 `miss.dat` 和 `error.dat`
 
 ---
 
@@ -290,10 +354,15 @@ wpl-check syntax models/wpl/*/parse.wpl
 # 4. 样本验证
 wpl-check sample models/wpl/nginx/parse.wpl models/wpl/nginx/sample.dat
 
-# 5. 查看日志
-tail -100 data/logs/wparse.log
+# 5. 批量运行
+wparse batch
 
-# 6. 数据统计
+# 6. 查看失败样本
+sed -n '1,50p' data/out_dat/miss.dat
+sed -n '1,50p' data/out_dat/error.dat
+
+# 7. 查看日志和统计
+tail -100 data/logs/wparse.log
 wproj data stat
 ```
 
@@ -304,3 +373,4 @@ wproj data stat
 - `references/wp-cli-tools.md` - CLI 工具使用
 - `references/wp-config-reference.md` - 配置文件详解
 - `references/wp-connectors.md` - 连接器配置
+- `references/wp-runtime-validation.md` - 工程目录约定与批量验证

@@ -27,6 +27,12 @@ WP_SKILLS_PLATFORM=claude-code bash <(curl -fsSL https://raw.githubusercontent.c
 
 Repository-bound skills such as `wpl-rule-check` stay in their source repositories and are not duplicated here.
 
+External install example:
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/wp-labs/wp-skills/main/install-skill.sh) wpl-rule-check
+```
+
 ## Skill Structure
 
 Each skill follows this structure:

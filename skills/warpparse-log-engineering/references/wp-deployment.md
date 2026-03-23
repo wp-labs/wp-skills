@@ -77,6 +77,29 @@ wproj data stat
 
 如果任务已经进入“如何写 `parse.wpl`”，转到 `references/wpl-authoring-routing.md`。
 
+## 从规则到运行时的最小模板
+
+不要把“规则能写出来”误判成“工程已经接线完成”。最小运行时模板至少包含：
+
+1. `models/wpl/<name>/parse.wpl`
+2. `models/wpl/<name>/sample.dat`
+3. `models/oml/<name>.oml`
+4. `topology/sources/wpsrc.toml`
+
+如果缺少 OML 或 source/sink 路由，即使 `wpl-check` 和 `wproj check` 通过，批量数据仍可能全部落到 `miss.dat`。
+
+推荐最小验证命令：
+
+```bash
+wproj check
+wproj data clean
+cp models/wpl/<name>/sample.dat data/in_dat/<name>.dat
+wparse batch
+wproj data stat
+sed -n '1,50p' data/out_dat/miss.dat
+sed -n '1,50p' data/out_dat/error.dat
+```
+
 ## rollout 设计
 
 把部署看成一个分阶段过程，而不是“规则写完就上线”：
@@ -98,6 +121,8 @@ wproj data stat
 - `wproj sources list|route`
 - 查看 `conf/wparse.toml`
 - 查看 `data/logs/` 下运行日志
+- 检查 `models/wpl/<name>/parse.wpl` / `sample.dat` 是否位于目录化路径
+- 检查 `models/oml/` 与 `topology/sources/` 是否已经补齐
 
 参考文档：
 

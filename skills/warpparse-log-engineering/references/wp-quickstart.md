@@ -45,18 +45,23 @@ wproj check
 ```
 my-project/
 ├── conf/
-│   └── wparse.toml        # 主配置文件
-├── connectors/            # 连接器配置
+├── connectors/
 ├── data/
-│   ├── logs/              # 运行日志
-│   ├── parsed/            # 解析输出
-│   └── samples/           # 样本数据
+│   ├── in_dat/
+│   ├── out_dat/
+│   └── logs/
 ├── models/
-│   ├── knowledge/         # 知识库
-│   ├── oml/               # OML 规则
-│   └── wpl/               # WPL 规则
-└── topology/              # 拓扑配置
+│   ├── knowledge/
+│   ├── oml/
+│   └── wpl/
+│       └── <name>/
+│           ├── parse.wpl
+│           └── sample.dat
+└── topology/
+    └── sources/
 ```
+
+**注意：** 工程内优先使用 `models/wpl/<name>/parse.wpl` 与 `models/wpl/<name>/sample.dat` 的目录化布局。把规则平铺为 `models/wpl/<name>.wpl` 时，离线校验可能通过，但运行时不一定按预期加载。
 
 ## 第三步：添加日志解析规则
 
@@ -96,50 +101,47 @@ package my_log_type {
 
 **注意：** 具体规则编写请切换到 `wpl-rule-check` skill。
 
+### 3.4 准备运行时接线
+
+仅有 WPL 规则还不够。要让数据真正进入运行时，还需要至少补齐：
+
+- `models/oml/my_log_type.oml`
+- `topology/sources/wpsrc.toml`
+- 对应 sink 配置
+
 ## 第四步：配置数据路由
 
-编辑 `conf/wparse.toml`，配置 source 和 sink：
-
-```toml
-[source]
-type = "file"
-path = "data/samples/input.log"
-
-[sink]
-type = "file"
-path = "data/parsed/output.json"
-```
+至少确认 source 会读取 `data/in_dat/` 下的输入文件，OML 会把数据路由到目标规则，sink 会把结果写到 `data/out_dat/`。如果只写了 `parse.wpl`，但没有补齐 OML/source/sink，运行时数据仍可能全部进入 `miss.dat`。
 
 ## 第五步：本地验证
 
 ```bash
 # 清理旧数据
 wproj data clean
-wpgen data clean
 
-# 生成测试样本（如果需要）
-wpgen sample -n 1000 --stat 2
+# 恢复测试输入
+cp models/wpl/my_log_type/sample.dat data/in_dat/my_log_type.dat
 
 # 运行解析
 wparse batch --stat 2 -p
 
 # 查看结果
 wproj data stat
+sed -n '1,50p' data/out_dat/miss.dat
+sed -n '1,50p' data/out_dat/error.dat
 ```
 
-**预期输出：**
-```
-Total lines:     1000
-Parsed:          1000
-Success rate:    100.00%
-Output size:     XXX KB
-```
+**注意：**
+
+- `wpl-check sample` 主要用于单样本验证，不等于批量通过。
+- `wproj data clean` 后，某些工程布局里需要重新恢复输入文件。
+- 如果要用 `wpgen sample --wpl models/wpl/my_log_type` 扩样，目录下必须存在固定文件名 `sample.dat`，且默认会向输出文件追加写入。
 
 ## 第六步：查看解析结果
 
 ```bash
 # 查看输出文件
-ls -la data/parsed/
+ls -la data/out_dat/
 
 # 查看解析日志
 tail -f data/logs/wparse.log
@@ -170,11 +172,17 @@ wpl-check syntax models/wpl/my_log_type/parse.wpl
 wpl-check sample models/wpl/my_log_type/parse.wpl models/wpl/my_log_type/sample.dat
 ```
 
+如果 `wpl-check sample` 通过，但 `wparse batch` 仍没有命中，优先检查：
+
+- 是否采用 `models/wpl/<name>/parse.wpl` 的目录化规则布局
+- 是否已补齐 `models/oml/<name>.oml`
+- `topology/sources/wpsrc.toml` 是否把数据路由到目标规则
+
 ### 问题3：字段缺失或错误
 
 ```bash
 # 检查输出格式
-head -20 data/parsed/output.json
+head -20 data/out_dat/demo.json
 
 # 验证规则字段定义
 cat models/wpl/my_log_type/parse.wpl
@@ -186,10 +194,11 @@ cat models/wpl/my_log_type/parse.wpl
 |------|------|--------|
 | 1. 安装 | `wproj --version` | 版本号显示 |
 | 2. 初始化 | `wproj check` | 无错误 |
-| 3. 样本 | `cat models/wpl/*/sample.dat` | 有样本数据 |
+| 3. 样本 | `ls models/wpl/*/sample.dat` | 有样本数据 |
 | 4. 规则 | `wpl-check syntax` | 语法正确 |
-| 5. 解析 | `wparse batch` | 无错误 |
-| 6. 结果 | `wproj data stat` | 成功率 > 95% |
+| 5. 接线 | `ls models/oml topology/sources` | OML/source 已补齐 |
+| 6. 解析 | `wparse batch` | 无错误 |
+| 7. 结果 | `wproj data stat` | 成功率 > 95%，且 `miss.dat` 可解释 |
 
 ---
 
