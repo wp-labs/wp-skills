@@ -44,18 +44,42 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "tag=$actual_tag" >> "$GITHUB_OUTPUT"
 
-      - name: Create GitHub release
+      - name: Build repo archives
+        env:
+          TAG_NAME: ${{ steps.version.outputs.tag }}
+        shell: bash
+        run: |
+          mkdir -p dist
+
+          git archive \
+            --format=zip \
+            --output "dist/wp-skills-${TAG_NAME}.zip" \
+            "$TAG_NAME"
+
+          git archive --format=tar "$TAG_NAME" \
+            | gzip -n > "dist/wp-skills-${TAG_NAME}.tar.gz"
+
+          ls -lh dist
+
+      - name: Create or update GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
           TAG_NAME: ${{ steps.version.outputs.tag }}
         shell: bash
         run: |
+          assets=(
+            "dist/wp-skills-${TAG_NAME}.zip"
+            "dist/wp-skills-${TAG_NAME}.tar.gz"
+          )
+
           if gh release view "$TAG_NAME" >/dev/null 2>&1; then
             echo "Release already exists for $TAG_NAME"
+            gh release upload "$TAG_NAME" "${assets[@]}" --clobber
             exit 0
           fi
 
           gh release create "$TAG_NAME" \
             --verify-tag \
             --title "wp-skills $TAG_NAME" \
-            --generate-notes
+            --generate-notes \
+            "${assets[@]}"
