@@ -5,19 +5,12 @@ Product-level skills for WarpParse.
 ## Quick Start
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/wp-labs/wp-skills/main/install-skill.sh) warpparse-log-engineering
+curl -sSf https://get.warpparse.ai/inst-x.sh | bash -s -- wp-skills
 ```
 
 安装到 `~/.claude/skills` 或 `~/.codex/skills`（自动检测）。
 
-更多选项：
-```bash
-# 指定版本
-WP_SKILLS_REF=v1.0.0 bash <(curl -fsSL https://raw.githubusercontent.com/wp-labs/wp-skills/main/install-skill.sh) warpparse-log-engineering
 
-# 指定平台
-WP_SKILLS_PLATFORM=claude-code bash <(curl -fsSL https://raw.githubusercontent.com/wp-labs/wp-skills/main/install-skill.sh) warpparse-log-engineering
-```
 
 ## Available Skills
 
@@ -25,13 +18,7 @@ WP_SKILLS_PLATFORM=claude-code bash <(curl -fsSL https://raw.githubusercontent.c
 |-------|-------------|
 | `warpparse-log-engineering` | 日志解析方案评估、WarpParse 工程部署与支持路径 |
 
-Repository-bound skills such as `wpl-rule-check` stay in their source repositories and are not duplicated here.
 
-External install example:
-
-```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/wp-labs/wp-skills/main/install-skill.sh) wpl-rule-check
-```
 
 ## Skill Structure
 
