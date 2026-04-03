@@ -1,0 +1,75 @@
+{
+  "name": "wpl-rule-check",
+  "version": "1.0.0",
+  "display_name": "WPL 规则编写与验证",
+  "description": "根据原始日志样本编写 WPL 解析规则和 OML 富化模型，并通过 wpl-check 离线验证闭环",
+  "author": "wp-labs",
+  "license": "MIT",
+  "platforms": [
+    "codex",
+    "claude-code"
+  ],
+  "categories": [
+    "log-parsing",
+    "wpl",
+    "oml",
+    "rule-authoring"
+  ],
+  "triggers": {
+    "keywords": [
+      "WPL",
+      "OML",
+      "写规则",
+      "解析规则",
+      "parse.wpl",
+      "rule.wpl",
+      "wpl-check",
+      "富化",
+      "enrichment",
+      "日志样本",
+      "sample"
+    ],
+    "patterns": [
+      "怎么写.*WPL",
+      "WPL.*语法",
+      "帮我写.*规则",
+      "解析.*样本",
+      "样本.*解析",
+      "OML.*怎么写",
+      "富化.*规则",
+      "wpl-check.*验证"
+    ]
+  },
+  "dependencies": {
+    "optional": [
+      {
+        "name": "wpl-check",
+        "description": "WPL 规则离线验证工具",
+        "url": "https://github.com/wp-labs/wpl-check"
+      },
+      {
+        "name": "wproj",
+        "description": "WarpParse 工程管理工具（用于集成验证）",
+        "url": "https://get.warpparse.ai"
+      }
+    ]
+  },
+  "resources": {
+    "docs": "https://docs.warpparse.ai",
+    "editor": "https://editor.warpparse.ai",
+    "github": "https://github.com/wp-labs"
+  },
+  "files": {
+    "skill": "SKILL.md",
+    "agents": {
+      "openai": "agents/openai.yaml"
+    },
+    "references": [
+      "references/wpl-language-core.md",
+      "references/oml-language-core.md",
+      "references/wpl-production-patterns.md",
+      "references/oml-enrichment-patterns.md",
+      "references/wpl-check-workflow.md"
+    ]
+  }
+}
