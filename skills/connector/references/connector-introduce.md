@@ -79,14 +79,37 @@ tags = ["type:tcp"]    # 附加的tag
     - `auto`（默认）：自动选择；默认优先 `len`，当 `prefer_newline=true` 时优先按行
 - tcp_recv_bytes: 表示TCP接收缓冲区大小，默认为4096字节。
 - prefer_newline: 当 framing=auto 时，是否优先按行分帧。
-- instances: 表示TCP连接的实例数，默认为1，最大为16。
+- instances: 表示处理TCP实例的并行度，默认为1，最大为16。
 
 #### kafka Source
 - brokers: 表示Kafka集群地址，格式为 `host:port`，多个broker可用逗号分隔。
 - topic: 表示要消费的主题列表，如果kafka中不存在则会自动创建。
 - group_id: 表示消费者组ID，默认为 `wparse_default_group`。
 - config: 表示额外的Kafka客户端配置。是一个字符串数组，每个配置的格式为 `key=value` ，常用于偏移量策略、TLS/SASL认证等配置。
-- instances: 表示TCP连接的实例数，默认为1，最大为16。
+- instances: 表示处理Kafka实例的并行度，默认为1，最大为16。
+
+
+#### Syslog Source
+- addr: 表示Syslog监听地址。
+- port: 表示Syslog监听端口。
+- protocol: 表示传输协议。可选值有：`udp`、`tcp`。
+- header_mode: 表示Syslog头部处理方式，默认为 `parse`。可选值有：`strip`、`parse`、`keep`。
+    - `strip`：仅剥离头部，不注入标签
+    - `parse`：解析头部并注入标签，同时剥离头部
+    - `keep`：保留头部，原样透传
+- fast_strip: 表示是否启用快速剥离模式，主要用于性能优化。
+- tcp_recv_bytes: 表示TCP模式下的接收缓冲区大小。
+- udp_recv_buffer: 表示UDP模式下的接收缓冲区大小。
+- instances: 表示处理Syslog实例的并行度，默认为1，最大为16。
+
+#### HTTP Source
+连接器参数：
+- port: 表示HTTP监听端口。
+- path: 表示HTTP监听路径。多个HTTP Source可以共用同一个端口，但路径不能重复。
+
+请求参数：
+- fmt: 表示请求体格式，可通过请求参数 `fmt` 或请求头 `Content-Type` 指定。可选值有：`json`、`ndjson`。
+- compression: 表示请求体压缩方式，可通过请求参数 `compression` 或请求头 `Content-Encoding` 指定，常见值为 `gzip` 或不压缩。
 
 
 ### SinkGroup与sink配置
