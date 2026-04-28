@@ -2,9 +2,10 @@ version = "2.0"
 
 [sink_group]
 name = "monitor"
-[[sink_group.sinks]]
-connect = "file_proto_sink"
-params = {  file = "monitor.dat" }
 
-[sink_group.sinks.expect]
-max = 1.0
+[[sink_group.sinks]]
+name = "monitor_output"
+connect = "file_json_sink"
+[sink_group.sinks.params]
+base = "./data/out_dat"
+file = "example.json"

@@ -2,9 +2,11 @@ version = "2.0"
 
 [sink_group]
 name = "miss"
+oml = []
+
 [[sink_group.sinks]]
-connect = "file_raw_sink"
-params = {  file = "miss.dat", sync = true }
-[sink_group.sinks.expect]
-max = 0.1
-min = 0.0
+name = "miss_output"
+connect = "file_json_sink"
+[sink_group.sinks.params]
+base = "./data/out_dat"
+file = "example.json"

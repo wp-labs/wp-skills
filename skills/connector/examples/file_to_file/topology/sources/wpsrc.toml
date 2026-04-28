@@ -3,6 +3,6 @@ key = "file_1"
 enable = true
 connect = "file_src"
 tags = ["wpsrc_in_ip : 10.0.0.1"]
-[sink_group.sinks.params]
+[sources.params]
 base = "models/wpl/nginx"
 file = "sample.dat"
