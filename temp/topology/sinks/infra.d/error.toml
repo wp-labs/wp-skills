@@ -1,0 +1,13 @@
+version = "2.0"
+
+[sink_group]
+name = "error"
+oml = []
+
+[[sink_group.sinks]]
+name = "error_output"
+connect = "file_raw_sink"
+
+[sink_group.sinks.params]
+base = "./data/out_dat"
+file = "error.data"

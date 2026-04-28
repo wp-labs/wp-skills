@@ -1,0 +1,10 @@
+[[connectors]]
+id = "tcp_src"
+type = "tcp"
+allow_override = ["addr", "port", "framing", "instances"]
+
+[connectors.params]
+addr = "0.0.0.0"
+port = 19012
+framing = "line"
+instances = 2

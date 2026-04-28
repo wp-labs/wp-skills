@@ -1,0 +1,16 @@
+name : nginx_access
+rule : nginx/nginx_access
+---
+access_ip: ip = read(wp_src_ip);
+log_desc = read(log_desc);
+log_type = read(log_type);
+raw_msg = pipe take(raw_msg) | json_escape;
+
+src_ip: ip = read(src_ip);
+access_time = read(access_time) | Time::to_ts_zone(8, ms);
+request = read(request);
+status: digit = read(status);
+body_bytes_sent = read(body_bytes_sent);
+referer = read(referer);
+user_agent = read(user_agent);
+x_forwarded_for = read(x_forwarded_for);

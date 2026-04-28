@@ -117,8 +117,8 @@ sink_group格式与sink格式
 ```toml
 [sink_group]
 name = "group名称"
-oml = ["匹配规则"]  # 表示这个sink_group会匹配哪些日志，匹配规则是一个OML表达式，日志满足这个OML表达式就会被路由到这个sink_group中
-rule = ["规则名称"]  # 表示这个sink_group会匹配哪些日志，匹配规则是一个WPL规则名称，日志满足这个WPL规则就会被路由到这个sink_group中.rule和oml至少要有一个，rule和oml不可以同时存在。
+oml = ["/oml/normal/*"]
+rule = ["/Nginx/*"]
 
 # sink连接器实例
 [[sink_group.sinks]]
@@ -129,8 +129,8 @@ tags = ["type:es"]    # 附加的tag
 ```
 sink_group参数：
 - name: sink_group名称。
-- oml: 表示这个sink_group会匹配哪些日志，匹配规则是一个OML表达式。
-- rule: 表示这个sink_group会匹配哪些日志，匹配规则是一个WPL规则名称。`rule` 和 `oml` 至少要有一个，且不能同时存在。
+- oml: sink_group会匹配oml name(富化后的数据)。
+- rule: sink_group会匹配wpl 的 `package名/rule名`，匹配规则支持`*`。`rule` 和 `oml` 至少要有一个，且不能同时存在。
 - batch_timeout_ms: 表示批量发送的超时时间，单位为毫秒。当达到这个时间时，当前批次的数据会被立即发送，无论批次大小是否已满。默认为1000毫秒。
 - parallel: 表示这个sink_group中每个sink连接器实例的并行度，默认为1，最大为16。如果有n个sink连接器实例，并行度为p，那么这个sink_group的总并行度就是n*p。
 

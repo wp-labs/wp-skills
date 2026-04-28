@@ -1,0 +1,12 @@
+version = "2.0"
+
+[sink_group]
+name = "nginx"
+rule = ["nginx"]
+
+[[sink_group.sinks]]
+connect = "vlogs_sink"
+
+[sink_group.sinks.params]
+endpoint = "http://localhost:9428"
+insert_path = "/api/_bulk"
