@@ -82,6 +82,12 @@ tags = ["type:tcp"]    # 附加的tag
 - instances: 表示TCP连接的实例数，默认为1，最大为16。
 
 #### kafka Source
+- brokers: 表示Kafka集群地址，格式为 `host:port`，多个broker可用逗号分隔。
+- topic: 表示要消费的主题列表，如果kafka中不存在则会自动创建。
+- group_id: 表示消费者组ID，默认为 `wparse_default_group`。
+- config: 表示额外的Kafka客户端配置。是一个字符串数组，每个配置的格式为 `key=value` ，常用于偏移量策略、TLS/SASL认证等配置。
+- instances: 表示TCP连接的实例数，默认为1，最大为16。
+
 
 ### SinkGroup与sink配置
 sink_group格式与sink格式
