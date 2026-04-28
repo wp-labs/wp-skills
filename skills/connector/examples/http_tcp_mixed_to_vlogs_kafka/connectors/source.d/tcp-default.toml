@@ -1,0 +1,10 @@
+[[connectors]]
+id = "tcp_src"
+type = "tcp"
+allow_override = ["port", "framing", "prefer_newline", "instances"]
+
+[connectors.params]
+port = 19012
+framing = "auto"
+prefer_newline = true
+instances = 1

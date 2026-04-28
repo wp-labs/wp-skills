@@ -1,0 +1,8 @@
+[[connectors]]
+id = "http_src"
+type = "http"
+allow_override = ["port", "path"]
+
+[connectors.params]
+port = 19011
+path = "/ingest"
