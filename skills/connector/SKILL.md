@@ -13,6 +13,8 @@ dependencies:
   optional:
     - wparse
     - wproj
+    - wpgen
+    - wp-monitor
   docs:
     - docs.warpparse.ai
 ---
@@ -40,6 +42,8 @@ dependencies:
 - 检查 `allow_override` 与实例参数是否匹配
 - 用本地示例目录对照接线方式和目录结构
 - 在不涉及规则语义的前提下，帮助用户把一条数据链路从 source 接到 sink
+- 为 source / sink 链路补充 `wpgen` 联调配置
+- 为链路补充 `wp-monitor` 观测接入建议
 
 ### 本 skill 不处理
 
@@ -71,6 +75,7 @@ dependencies:
 4. `connectors.params` 定义默认值，实例侧只覆盖 `allow_override` 允许的参数。
 5. `source` 独立存在；`sink` 必须挂在 `sink_group` 下。
 6. 能复用已有连接器定义时，不新造一套命名。
+7. 需要压测、回放或观测时，优先复用本地 `wpgen` / `wp-monitor` 参考材料。
 
 ## 先检查什么
 
@@ -82,6 +87,8 @@ dependencies:
 - 目标类型是什么：`file`、`tcp`、`kafka`、`syslog`、`http` 等
 - 需要覆盖哪些参数，是否已经在 `allow_override` 中声明
 - 是否已有可复用的连接器 id
+- 是否需要 `wpgen` 生成测试流量
+- 是否需要 `wp-monitor` 观察输入、解析、MISS 和下游输出指标
 
 ## 标准工作流
 
@@ -185,6 +192,40 @@ file = "example.json"
 - sink connector id 是否拼写一致
 - 基础设施 sink 是否存在：`default`、`error`、`miss`、`monitor`、`residue`
 
+### 5. 需要联调时接入 wpgen
+
+当用户不仅要“写配置”，还要“把链路跑起来”时，优先考虑是否需要 `wpgen`：
+
+- 需要稳定、可控地向某个 sink 或链路发送测试数据
+- 需要按恒定速率、渐进速率或突发流量做压测
+- 需要用 sample / rule 批量生成测试数据
+
+使用要点：
+
+- `wpgen` 配置文件通常位于 `conf/wpgen.toml`
+- `[output].connect` 引用 `connectors/sink.d` 中的 sink connector id
+- `[output].params` 只能覆盖 `allow_override` 允许的键
+- 当 `source` 难以直接造数据时，可先用 `wpgen -> sink` 做下游验证
+
+如果任务涉及 `wpgen`，优先参考：`references/wpgen.md`
+
+### 6. 需要观测时接入 wp-monitor
+
+当用户需要判断链路是否真的工作正常，而不是只看配置语法时，优先考虑是否需要 `wp-monitor`：
+
+- 观察 source 输入量、解析成功率、MISS、错误和 sink 输出量
+- 排查 monitor / miss / downstream 是否异常
+- 给联调环境补齐指标与 miss 查询入口
+
+使用要点：
+
+- `wp-monitor` 依赖 `victoria-metrics` 存指标
+- 如果要查看 miss 日志，通常还需要 `victoria-logs`
+- `wparse` 侧通常需要在 `infra.d/monitor.toml` 中接 `victoriametrics_sink`
+- `wp-monitor` 自身配置通常通过 `app.toml` 提供 `vm_base_url` 和 `vlog_base_url`
+
+如果任务涉及观测或监控联调，优先参考：`references/wp-monitor.md`
+
 ## 常见类型选择
 
 ### 常见 source
@@ -219,6 +260,8 @@ file = "example.json"
 - 改了哪些文件
 - source 和 sink 是怎么接起来的
 - 哪些参数来自默认定义，哪些参数在实例侧覆盖
+- 如果使用了 `wpgen`，说明它往哪一个 sink connector 发数据
+- 如果使用了 `wp-monitor`，说明监控数据和 miss 数据分别落到哪里
 
 ## 输出要求
 
@@ -234,7 +277,12 @@ file = "example.json"
 优先参考本地材料：
 
 - `references/connector-introduce.md`：source / sink / sink_group 总览、常用参数整理
+- `references/wpgen.md`：`wpgen` 配置、输出接线和压测速度模型
+- `references/wp-monitor.md`：`wp-monitor` 配置、监控 sink 接入和观测依赖
+- `references/warp-console-observability.md`：从 `warp-console` 提炼出的日志解析 + 观测完整链路
 - `examples/file_to_file/`：最小 file source -> file sink 示例
+- `examples/metrics-example/`：`victoria-metrics`、`victoria-logs`、`wp-monitor` 联调示例
+- `examples/warp-observability/`：基于 `warp-console` 的完整联调示例入口
 
 示例目录中的关键文件：
 
@@ -244,6 +292,9 @@ file = "example.json"
 - `examples/file_to_file/topology/sinks/business.d/example.toml`
 - `examples/file_to_file/topology/sinks/defaults.toml`
 - `examples/file_to_file/conf/wparse.toml`
+- `examples/metrics-example/docker-compose.yml`
+- `examples/metrics-example/wp-monitor/config/app.toml`
+- `examples/warp-observability/README.md`
 
 ## 不要做的事
 
