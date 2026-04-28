@@ -127,3 +127,124 @@ connect = "连接器id"    # 在connectors/sink.d/对应的连接器定义的id
 tags = ["type:es"]    # 附加的tag
 [sink_group.sinks.params]   # 覆盖连接器定义中的参数
 ```
+sink_group参数：
+- name: sink_group名称。
+- oml: 表示这个sink_group会匹配哪些日志，匹配规则是一个OML表达式。
+- rule: 表示这个sink_group会匹配哪些日志，匹配规则是一个WPL规则名称。`rule` 和 `oml` 至少要有一个，且不能同时存在。
+- batch_timeout_ms: 表示批量发送的超时时间，单位为毫秒。当达到这个时间时，当前批次的数据会被立即发送，无论批次大小是否已满。默认为1000毫秒。
+- parallel: 表示这个sink_group中每个sink连接器实例的并行度，默认为1，最大为16。如果有n个sink连接器实例，并行度为p，那么这个sink_group的总并行度就是n*p。
+
+sink通用参数：
+- name: sink实例名称，在同一个sink_group中应保持唯一。
+- connect: 在 `connectors/sink.d/` 中引用的连接器定义id。
+- tags: sink实例附加的tag。
+- params: 用于覆盖连接器定义中允许覆盖的参数.
+- batch_size: 表示批量处理大小（缓冲区大小）。
+
+#### Blackhole Sink
+- 无参数。表示直接丢弃数据，常用于测试或占位。
+
+#### File Sink
+连接器参数：
+- fmt: 表示输出格式，常见值有：`json`、`csv`、`kv`、`show`、`raw`、`proto-text`。
+- base: 表示输出目录。
+- file: 表示输出文件名。
+
+#### Syslog Sink
+- addr: 表示Syslog服务端地址。
+- port: 表示Syslog服务端端口。
+- protocol: 表示传输协议。可选值有：`udp`、`tcp`。
+
+#### TCP Sink
+- addr: 表示TCP服务端地址。
+- port: 表示TCP服务端端口。
+- framing: 表示发送数据的分帧方式。可选值有：`line`、`len`。
+    - `line`：在每条消息末尾追加换行符
+    - `len`：按长度前缀发送，格式为 `<len><SP><payload>`
+- max_backoff: 表示是否启用基于内核发送队列的退避控制。
+
+#### Kafka Sink
+- brokers: 表示Kafka集群地址，格式为 `host:port`，多个broker可用逗号分隔。
+- topic: 表示目标主题，不存在则创建。
+- num_partitions: 表示自动创建主题时的分区数，默认为 `1`。
+- replication: 表示自动创建主题时的副本数，默认为 `1`。
+- config: 表示额外的Kafka生产者配置。是一个字符串数组，每个配置的格式为 `key=value`。
+
+#### Prometheus Sink
+- endpoint: 表示Prometheus指标暴露地址，格式为 `host:port`。
+- source_key_format: 表示从source key中提取标签的正则表达式。
+- sink_key_format: 表示从sink key中提取标签的正则表达式。
+
+#### MySQL Sink
+- endpoint: 表示MySQL地址，格式为 `host:port`。
+- username: 表示MySQL用户名。
+- password: 表示MySQL密码。
+- database: 表示目标数据库名。
+- table: 表示目标表名。
+- columns: 表示写入字段列表。
+- batch: 表示批量写入条数。
+- batch_size: 表示批量处理大小。
+
+#### Doris Sink
+- endpoint: 表示Doris写入地址，示例中使用BE的HTTP端口。
+- user: 表示Doris用户名。
+- password: 表示Doris密码。
+- database: 表示目标数据库名。
+- table: 表示目标表名。
+- timeout_secs: 表示单次请求超时时间。
+- max_retries: 表示写入失败后的最大重试次数。
+- batch_size: 表示批量写入大小。
+- headers: 是一个对象，表示额外的Stream Load请求头配置。
+
+#### Postgres Sink
+- endpoint: 表示Postgres地址，格式为 `host:port`。
+- username: 表示Postgres用户名。
+- password: 表示Postgres密码。
+- database: 表示目标数据库名。
+- table: 表示目标表名。
+- columns: 表示写入字段列表。
+- batch: 表示批量写入条数。
+- batch_size: 表示批量处理大小。
+
+#### VictoriaLogs Sink
+- endpoint: 表示VictoriaLogs服务地址。
+- insert_path: 表示写入路径。
+- flush_interval_secs: 表示刷新间隔，单位为秒。
+- create_time_field: 表示用于提取事件时间的字段名。
+- batch_size: 表示批量写入大小。
+
+#### VictoriaMetrics Sink
+- insert_url: 表示VictoriaMetrics写入地址。
+- flush_interval_secs: 表示刷新间隔，单位为秒。
+
+#### Elasticsearch Sink
+- protocol: 表示连接协议。可选值有：`http`、`https`。
+- host: 表示Elasticsearch主机地址。
+- port: 表示Elasticsearch端口。
+- username: 表示Elasticsearch用户名。
+- password: 表示Elasticsearch密码。
+- index: 表示目标索引名。
+- timeout_secs: 表示单次请求超时时间。
+- max_retries: 表示写入失败后的最大重试次数。
+- batch_size: 表示批量写入大小。
+
+#### ClickHouse Sink
+- endpoint: 表示ClickHouse地址，格式为 `http://host:port` 或 `https://host:port`。
+- username: 表示ClickHouse用户名。
+- password: 表示ClickHouse密码。
+- database: 表示目标数据库名。
+- table: 表示目标表名。
+- timeout_secs: 表示单次请求超时时间。
+- max_retries: 表示写入失败后的最大重试次数。
+- batch_size: 表示批量写入大小。
+
+#### HTTP Sink
+- endpoint: 表示HTTP写入地址。
+- username: 表示HTTP Basic认证用户名。
+- password: 表示HTTP Basic认证密码。
+- fmt: 表示输出格式。可选值通常有：`json`、`ndjson`、`csv`、`kv`、`raw`、`proto-text`。
+- compression: 表示请求体压缩方式。可选值有：`none`、`gzip`。
+- timeout_secs: 表示单次请求超时时间。
+- max_retries: 表示请求失败后的最大重试次数。
+- batch_size: 表示批量发送大小。
+- headers: 表示自定义HTTP请求头，是一个对象。
