@@ -1,6 +1,6 @@
 # warp-console 日志解析与观测示例
 
-`warp-console` 是一个更接近真实运行环境的综合示例。对 connector skill 来说，不需要整套平台，只需要抽出**日志解析 + 观测**这条主线即可。
+`warp-console` 是一个更接近真实运行环境的综合示例。对 `wp-deploy` skill 来说，不需要整套平台，只需要抽出**日志解析 + 观测 + 部署接线**这条主线即可。
 
 本文只保留以下组件：
 
@@ -33,7 +33,7 @@
 它适合回答这类问题：
 
 - “source 和 sink 都配好了，怎么把整条链路跑起来？”
-- “怎么给 connector 联调环境补一个观察面？”
+- “怎么给部署联调环境补一个观察面？”
 - “怎么确认 monitor / miss / downstream 是不是正常？”
 
 ## 精简后的目录主线
@@ -163,7 +163,7 @@ wpgen
 - 运行指标走 `victoria-metrics`
 - `wp-monitor` 同时消费这两侧的数据
 
-## 对 connector skill 的价值
+## 对 wp-deploy skill 的价值
 
 这个示例最值得复用的不是“某个具体参数”，而是**完整联调方法**：
 
@@ -201,7 +201,7 @@ wpgen
 
 ## 最小裁剪建议
 
-如果你要把 `warp-console` 裁成一个更专注的 connector 联调环境，推荐只保留：
+如果你要把 `warp-console` 裁成一个更专注的部署联调环境，推荐只保留：
 
 ```sh
 .
@@ -222,4 +222,4 @@ wpgen
 - `initdb/`
 - `.env` 中 station / gitea / pg 相关变量
 
-这样更符合 connector skill 的关注范围：**接线、联调、观测**。
+这样更符合 `wp-deploy` skill 的关注范围：**接线、联调、观测、部署**。

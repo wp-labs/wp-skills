@@ -16,6 +16,8 @@ curl -sSf https://get.warpparse.ai/inst-x.sh | bash -s -- wp-skills
 
 | Skill | Description |
 |-------|-------------|
+| `wp-deploy` | WarpParse 的 source/sink、wpgen、wp-monitor 与联调部署配置指导 |
+| `wpl-rule-check` | 根据日志样本编写 WPL/OML，并通过 wpl-check 验证 |
 | `warpparse-log-engineering` | 日志解析方案评估、WarpParse 工程部署与支持路径 |
 
 
@@ -38,7 +40,7 @@ skills/<skill-name>/
 ```bash
 git clone https://github.com/wp-labs/wp-skills.git
 cd wp-skills
-bash install-skill.sh warpparse-log-engineering
+bash install-skill.sh wp-deploy
 ```
 
 ## Environment Variables
@@ -81,10 +83,10 @@ Auto-detection prefers the platform with an existing skills directory, defaultin
 
 ## Trigger Keywords
 
-Each skill defines trigger keywords for automatic activation. For `warpparse-log-engineering`:
+Each skill defines trigger keywords for automatic activation. For `wp-deploy`:
 
-- 日志解析、WarpParse、wproj、wparse、WPL、日志工程
-- "怎么解析.*日志"、"日志解析.*选型"、"WarpParse.*适合"
+- WarpParse 部署、source、sink、connector、wpgen、wp-monitor、联调、观测
+- "怎么部署.*WarpParse"、"怎么接.*wpgen"、"怎么把.*链路跑起来"
 
 ## Dependencies
 

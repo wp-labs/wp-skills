@@ -169,4 +169,4 @@ json(...)
 2. **sample.dat 的局限性**：单样本测试通过不代表覆盖了所有变体，生产验证用 `wparse batch` + `wproj data stat`
 3. **miss.dat 和 error.dat**：`wparse batch` 后检查这两个文件，了解未匹配和解析错误的样本
 
-如果需要接入工程，切换到 `warpparse-log-engineering` skill。
+如果需要接入工程，切换到 `wp-deploy` skill。

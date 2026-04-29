@@ -1,0 +1,81 @@
+{
+  "name": "wp-deploy",
+  "version": "1.0.0",
+  "display_name": "WarpParse 部署配置指导",
+  "description": "指导 WarpParse 的 source/sink/connectors/topology、wpgen、wp-monitor 与联调部署配置",
+  "author": "wp-labs",
+  "license": "MIT",
+  "platforms": [
+    "codex",
+    "claude-code"
+  ],
+  "categories": [
+    "deployment",
+    "devops",
+    "connectors",
+    "observability"
+  ],
+  "triggers": {
+    "keywords": [
+      "wp-deploy",
+      "WarpParse 部署",
+      "source",
+      "sink",
+      "connector",
+      "wpgen",
+      "wp-monitor",
+      "docker compose",
+      "联调",
+      "观测"
+    ],
+    "patterns": [
+      "怎么部署.*WarpParse",
+      "帮我配.*source",
+      "帮我配.*sink",
+      "怎么接.*wpgen",
+      "怎么接.*wp-monitor",
+      "如何.*联调",
+      "怎么把.*链路跑起来"
+    ]
+  },
+  "dependencies": {
+    "optional": [
+      {
+        "name": "wparse",
+        "description": "WarpParse 解析引擎",
+        "url": "https://get.warpparse.ai"
+      },
+      {
+        "name": "wproj",
+        "description": "WarpParse 工程管理工具",
+        "url": "https://get.warpparse.ai"
+      },
+      {
+        "name": "wpgen",
+        "description": "WarpParse 数据生成工具",
+        "url": "https://get.warpparse.ai"
+      },
+      {
+        "name": "wp-monitor",
+        "description": "WarpParse 观测界面",
+        "url": "https://get.warpparse.ai"
+      }
+    ]
+  },
+  "resources": {
+    "docs": "https://docs.warpparse.ai",
+    "github": "https://github.com/wp-labs"
+  },
+  "files": {
+    "skill": "SKILL.md",
+    "agents": {
+      "openai": "agents/openai.yaml"
+    },
+    "references": [
+      "references/connector-introduce.md",
+      "references/wpgen.md",
+      "references/wp-monitor.md",
+      "references/warp-console-observability.md"
+    ]
+  }
+}
