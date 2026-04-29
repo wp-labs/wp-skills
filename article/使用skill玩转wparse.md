@@ -52,7 +52,7 @@ install-skill.sh wpl-rule-check
 - “帮我接 wp-monitor，看 parse 和 miss 指标”
 - “这条日志帮我写 WPL 和 OML，并验证一下”
 
-对于新手来说，先别急着死啃文档，  
+对于新手来说，先别急着啃文档，  
 先装上 `wp-skills`，  
 让 `wp-deploy` 带你把链路跑起来，  
 再让 `wpl-rule-check` 带你把规则写对。
