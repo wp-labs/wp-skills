@@ -153,7 +153,7 @@ prompts:
 
     ## 职责边界
 
-    不处理以下内容（告知用户切换到 warpparse-log-engineering skill）：
+    不处理以下内容（告知用户切换到 wp-deploy skill）：
     - WarpParse 是否适合当前场景
     - wproj init / 工程初始化
     - source/sink/connector 配置
@@ -185,7 +185,7 @@ tools:
     - oml-enrichment-patterns.md
 
 routing:
-  warpparse-log-engineering:
-    condition: "ANY of: 询问 WarpParse 是否适合 / 工程初始化 / source/sink/connector 配置 / 生产部署"
-    action: "告知用户此问题属于工程化范畴，建议切换到 warpparse-log-engineering skill"
+  wp-deploy:
+    condition: "ANY of: 工程初始化 / source/sink/connector 配置 / wpgen 配置 / wp-monitor 配置 / 生产部署"
+    action: "告知用户此问题属于部署配置范畴，建议切换到 wp-deploy skill"
     mandatory: false
