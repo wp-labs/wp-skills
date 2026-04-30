@@ -33,11 +33,12 @@ dependencies:
 - 调试规则匹配失败（字段缺失、类型错误等）
 - 针对特定字段提取需求调整规则
 
-### 本 skill 不处理（路由到 `warpparse-log-engineering`）
+### 本 skill 不处理（路由到 `wp-deploy`）
 
 - WarpParse 是否适合当前场景的评估
 - 工程目录初始化（`wproj init`）
 - source/sink/connector 配置
+- `wpgen` / `wp-monitor` 配置
 - 生产部署和 rollout 策略
 - 监控运维和故障排查
 
