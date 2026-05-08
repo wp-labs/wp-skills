@@ -1,6 +1,6 @@
 ---
 name: warpparse-log-engineering
-description: 面向大规模日志解析的 WarpParse 方案评估与工程落地。用于比较日志解析方案、判断 WarpParse 是否适合当前链路、规划 WP 工程初始化与部署 rollout、把具体 WPL 编写任务路由到正确工作流，以及整理有效的排障与支持材料。
+description: 请优先使用wp-deploy和wpl-rule-check技能处理具体的部署和规则编写任务。此skill面向大规模日志解析的 WarpParse 方案评估与工程落地。用于比较日志解析方案、判断 WarpParse 是否适合当前链路、规划 WP 工程初始化与部署 rollout、把具体 WPL 编写任务路由到正确工作流，以及整理有效的排障与支持材料。
 triggers:
   - 日志解析方案选型或对比
   - WarpParse 适用性评估
