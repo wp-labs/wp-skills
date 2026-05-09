@@ -207,15 +207,16 @@ sink通用参数：
 - batch_size: 表示批量处理大小。
 
 #### VictoriaLogs Sink
-- endpoint: 表示VictoriaLogs服务地址。
-- insert_path: 表示写入路径。
-- flush_interval_secs: 表示刷新间隔，单位为秒。
-- create_time_field: 表示用于提取事件时间的字段名。
+- endpoint: 表示VictoriaMetrics的地址（不包括URI）。
+- api_path: 表示插入的uri。
+- timeout_secs: 请求超时时间。
+- timestamp_field: 表示用于提取事件时间的字段名。
 - batch_size: 表示批量写入大小。
 
 #### VictoriaMetrics Sink
-- insert_url: 表示VictoriaMetrics写入地址。
-- flush_interval_secs: 表示刷新间隔，单位为秒。
+- endpoint: 表示VictoriaMetrics的地址（不包括URI）。
+- api_path: 表示插入的uri。
+- timeout_secs: 请求超时时间。
 
 #### Elasticsearch Sink
 - protocol: 表示连接协议。可选值有：`http`、`https`。
