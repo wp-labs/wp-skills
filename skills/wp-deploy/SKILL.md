@@ -1,6 +1,6 @@
 ---
 name: wp-deploy
-description: 提供 WarpParse 的部署配置指导，覆盖 source/sink/connectors/topology、wpgen、wp-monitor，以及联调与部署接线。适用场景：帮我搭一套 wparse 工程配置、把 source 和 sink 接起来、补 wpgen 做回放或压测、接 wp-monitor 看指标和 miss、补 docker compose 或部署说明。
+description: 提供ETL引擎 WarpParse 的部署配置指导，覆盖输入、输出、监控、发送测试、 以及联调与部署接线。适用场景：帮我搭一套 wparse 工程配置、添加一个输入和输出、对ELT引擎进行压测、接入wparse监控看指标和丢失数据、补 docker compose 或部署说明。
 triggers:
   - 编写或修改 source 连接器
   - 编写或修改 sink 连接器
@@ -22,17 +22,31 @@ dependencies:
     - docs.warpparse.ai
 ---
 
-# WarpParse 部署配置指导
+# wparse 介绍
+WarpParse 是一个高性能的 ELT 引擎，专注于日志数据的解析、处理和转发。它的核心组件包括：
+- wparse：ELT 引擎本身
+- wpgen：用于生成测试数据的工具
+- wproj: 用来管理和验证 WPL 规则的工具
+- wp-monitor：监控工具，用于监控 wparse 的运行状态和指标。
 
-这个 skill 专注于一件事：**把 WarpParse 的 source、sink、topology、wpgen、wp-monitor 和部署接线配置成一条可运行、可联调、可观测的链路**。
+**概念介绍**
+- connector：连接器，定义输入输出的类型和参数模板，位于 `connectors/source.d` 和 `connectors/sink.d`，source和sink都是连接器的具体实例。
+- source/sink：数据输入输出实例，挂在 `topology/sources` 和 `topology/sinks` 下，引用 connector 定义并覆盖参数形成可用的输入输出。
+- sink_group：sink的组合，表示这批sink接收同一批业务数据。
+- wpl：WarpParse的规则语言，定义日志解析和字段提取逻辑，位于 `models/wpl`。
+- oml：WarpParse的富化模型定义语言，定义基于解析结果的衍生字段和指标，位于 `models/oml`。
+- 知识库：富化可以从外部系统查询数据的配置，知识库定义位于 `models/knowledge/`。
+
+# WarpParse 部署配置指导
 
 它主要处理 5 类问题：
 
-1. 选择合适的 source / sink 类型并编写 connector 定义
-2. 编写 `topology/sources`、`topology/sinks` 和 `conf/wparse.toml`
-3. 为链路补 `wpgen` 回放或压测配置
-4. 为链路补 `wp-monitor` 与 `victoria-metrics` / `victoria-logs` 观测配置
-5. 基于本地 examples 输出可执行的部署和启动方式
+1. 下载wparse的各类工具
+2. 选择合适的 source / sink 类型并编写 connector 定义和实例
+3. 编写 wparse 知识库配置。
+4. 为链路补 `wpgen` 回放或压测配置
+5. 为链路补 `wp-monitor` 与 `victoria-metrics` / `victoria-logs` 观测配置
+6. 基于本地 examples 输出可执行的部署和启动方式
 
 ## 职责边界
 
@@ -57,7 +71,7 @@ dependencies:
 
 ### 强制路由
 
-当任务进入以下任一阶段时，**必须停止当前工作并切换到 `wpl-rule-check`**：
+当任务进入以下任一阶段时，**必须停止当前工作并切换到 `wpl-rule-check`skill中**：
 
 - 用户提供原始日志样本，要求解析字段
 - 用户要求编写或修改 `parse.wpl` / `rule.wpl`
@@ -278,6 +292,8 @@ file = "example.json"
 
 ## 完成标准
 
+编写后，必须使用wproj进行验证。
+
 结束前至少要给出以下结果中的一种：
 
 1. 一组完整可落地的部署配置，覆盖 connector + topology + `wparse.toml`
@@ -305,6 +321,8 @@ file = "example.json"
 
 优先参考本地材料：
 
+- `references/cli-introduce.md`：wparse、wpgen、wproj 的 CLI 使用方法和参数说明
+- `references/knowdb-introduce.md`：知识库配置说明和示例
 - `references/connector-introduce.md`：source / sink / sink_group 总览、常用参数整理
 - `references/wpgen.md`：`wpgen` 配置、输出接线和压测速度模型
 - `references/wp-monitor.md`：`wp-monitor` 配置、监控 sink 接入和观测依赖

@@ -1,7 +1,7 @@
 services:
   warp-parse:
     user: "root"
-    image: ghcr.io/wp-labs/warp-parse:0.23.8-alpha
+    image: ghcr.io/wp-labs/warp-parse:latest
     container_name: warp-parse
     restart: unless-stopped
     ports:
@@ -79,7 +79,7 @@ services:
       start_period: 30s
 
   wp-monitor:
-    image: ghcr.io/wp-labs/wp-monitor:0.4.1-alpha
+    image: ghcr.io/wp-labs/wp-monitor:latest
     container_name: wp-monitor
     restart: unless-stopped
     ports:

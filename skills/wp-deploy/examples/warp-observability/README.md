@@ -39,7 +39,7 @@
 `docker-compose.yml` 中只保留了与日志解析和观测直接相关的 4 个服务：
 
 - `warp-parse`
-  - 镜像：`ghcr.io/wp-labs/warp-parse:0.23.0-alpha`
+  - 镜像：`ghcr.io/wp-labs/warp-parse:latest`
   - 挂载：`./wparse:/app/config`
   - 入口：`wparse deamon --work-root /app/config`
   - 端口：
