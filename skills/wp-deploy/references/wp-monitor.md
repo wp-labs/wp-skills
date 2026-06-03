@@ -3,34 +3,21 @@ Wp-Monitor 是面向 WarpParse 数据链路的统一观察入口，用于查看�
 
 Wp-Monitor 依赖于victoriametrics进行指标存储和查询，依赖victorialogs查看miss的数据。
 
+
 ## wp-monitor配置
+Wp-Monitor 的配置文件的默认路径为 `./config/app.toml`，该配置文件可以使用`APP_CONFIG_PATH`环境变量指定路径。
 ```toml
 vm_base_url = "http://victoria-metrics:8428"
 vlog_base_url = "http://victoria-logs:9428"
 log_level = "info"
+miss_file_path = "../wp-example/data/out_dat/miss.dat"
 ```
 
 - vm_base_url: victoriametrics的地址，Wp-Monitor会把指标数据发送到这个地址。
 - vlog_base_url: 可选，victorialogs的地址，Wp-Monitor会从这个地址查询miss的数据。
 - log_level: Wp-Monitor的日志级别，默认为info。
+- miss_file_path: miss数据文件的路径,当配置了miss_file_path时，Wp-monitor展示的miss数据来源于该文件，否则来源于victoria-logs。
 
-在示例工程中，`app.toml` 还包含如下常见字段：
-
-```toml
-vm_base_url = "http://victoria-metrics:8428"
-vlog_base_url = "http://victoria-logs:9428"
-
-api_version = "v1"
-log_level = "info"
-refresh_interval_sec = 5
-default_window_min = 15
-time_presets = [5, 15, 30, 60]
-```
-
-- api_version: API版本，示例中为 `v1`。
-- refresh_interval_sec: 页面刷新间隔，单位为秒。
-- default_window_min: 默认时间窗口，单位为分钟。
-- time_presets: 页面预设时间窗口列表，单位为分钟。
 
 ## docker compose示例
 
@@ -86,7 +73,7 @@ services:
       start_period: 30s
 
   wp-monitor:
-    image: ghcr.io/wp-labs/wp-monitor:0.4.1-alpha
+    image: ghcr.io/wp-labs/wp-monitor:latest
     container_name: wp-monitor
     restart: unless-stopped
     ports:
@@ -103,28 +90,6 @@ volumes:
     driver: local
 ```
 
-建议的目录结构：
-
-```sh
-.
-├── docker-compose.yml
-└── wp-monitor/
-    └── config/
-        └── app.toml
-```
-
-对应的 `wp-monitor/config/app.toml` 可写为：
-
-```toml
-vm_base_url = "http://victoria-metrics:8428"
-vlog_base_url = "http://victoria-logs:9428"
-
-api_version = "v1"
-log_level = "info"
-refresh_interval_sec = 5
-default_window_min = 15
-time_presets = [5, 15, 30, 60]
-```
 
 启动命令：
 
@@ -135,16 +100,51 @@ docker compose logs wp-monitor
 
 启动后可通过 `http://localhost:18080` 访问 `wp-monitor` 页面。
 
-## wparse将指标接入到victoriametrics
-在wparse的基础设施`infra.d/monitor.toml`中提供一个sink。
+## wparse接入指标到victoriametrics
+
+- 提供一个victoriametrics连接器`wparse/connectors/sink.d/victoriametrics.toml`,内容如下：
+```toml
+[[connectors]]
+id = "victoriametrics_sink"
+type = "victoriametrics"
+allow_override = ["endpoint", "api_path", "timeout_secs","batch_size"]
+[connectors.params]
+endpoint = "http://victoria-metrics:8428"
+api_path = "/api/v1/import/prometheus"
+timeout_secs = 3
+```
+
+- 在wparse的monitor基础设施中`wparse/topology/sinks/infra.d/monitor.toml`中提供一个sink。
 ```toml
 [[sink_group.sinks]]
 name = "metrics_vmetrics_sink"
 connect = "victoriametrics_sink"
 [sink_group.sinks.params]
-insert_url = "http://victoria-metrics:8428/api/v1/import/prometheus"
-flush_interval_secs = 1
+endpoint = "http://victoria-metrics:8428"
+api_path = "/api/v1/import/prometheus"
 ```
 
-如果还需要在 `wp-monitor` 中查看 miss 数据，通常还需要给业务或基础设施链路接入 `victorialogs_sink`，并保证 `vlog_base_url` 指向可访问的 VictoriaLogs 地址。
+## 接入miss日志到victorialogs中
+- 提供一个victorialogs连接器,`wparse/connectors/sink.d/victorialogs.toml`内容如下：
+```toml
+[[connectors]]
+id = "victorialogs_sink"
+type = "victorialogs"
+allow_override = ["endpoint", "api_path", "timestamp_field", "timeout_secs","batch_size","tags"]
+[connectors.params]
+endpoint = "http://victoria-logs:9428"
+api_path = "/insert/jsonline"
+timeout_secs = 3
+```
+
+- 在wparse的miss基础设施中`wparse/topology/sinks/infra.d/miss.toml`中提供一个sink，sink需要包含`wp_stage:miss`tag。
+```toml
+[[sink_group.sinks]]
+name = "victorialogs_output"
+connect = "victorialogs_sink"
+[sink_group.sinks.params]
+endpoint = "http://wp-monitor-victoria-logs:9428"
+api_path = "/insert/jsonline?_msg_field=content,log"
+tags = ["wp_stage:miss"]
+```
 

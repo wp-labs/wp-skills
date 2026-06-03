@@ -4,5 +4,9 @@ version = "2.0"
 name = "miss"
 
 [[sink_group.sinks]]
-connect = "file_proto_sink"
-params = { file = "miss.dat", base = true }
+name = "victorialogs_output"
+connect = "victorialogs_sink"
+[sink_group.sinks.params]
+endpoint = "http://wp-monitor-victoria-logs:9428"
+api_path = "/insert/jsonline?_msg_field=content,log"
+tags = ["wp_stage:miss"]

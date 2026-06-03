@@ -3,13 +3,15 @@
 [sink_group]
 name = "monitor"
 
-[[sink_group.sinks]]
-name = "metrics_file_sink"
-connect = "file_proto_sink"
-params = {  file = "monitor.dat" }
+# [[sink_group.sinks]]
+# name = "metrics_file_sink"
+# connect = "file_proto_sink"
+# params = {  file = "monitor.dat" }
 
 
 [[sink_group.sinks]]
 name = "metrics_vmetrics_sink"
 connect = "victoriametrics_sink"
-params = { insert_url = "http://victoria-metrics:8428/api/v1/import/prometheus",flush_interval_secs = 1}
+[sink_group.sinks.params]
+endpoint = "http://victoria-metrics:8428"
+api_path = "/api/v1/import/prometheus"

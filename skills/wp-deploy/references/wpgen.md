@@ -10,9 +10,7 @@ wpgen 是数据生成工具，用于按照规则或样本生成测试数据。
 version = "1.0"
 
 [generator]
-mode = "sample"          # 生成模式：rule | sample
 count = 1000             # 生成总条数（可选）
-duration_secs = 60       # 生成持续时间（秒，可选，与 count 二选一）
 speed = 1000             # 恒定速率（行/秒），0 为无限速
 parallel = 1             # 并行度
 rule_root = "./rules"    # 规则目录（mode=rule 时使用）
@@ -31,29 +29,38 @@ output = "file"
 file_path = "./data/logs/"
 ```
 
-## 变量化示例
-
-`wpgen.toml` 也适合用 `${VAR}` 提升环境切换效率：
-
-```toml
-version = "1.0"
-
-[generator]
-mode = "rule"
-rule_root = "${WORK_ROOT}/models/wpl"
-
-[output]
-connect = "file_${ENV}"
-name = "gen_${ENV}"
-params = { base = "${WORK_ROOT}/data/out", file = "${OUTPUT_FILE}" }
-
-[logging]
-level = "${LOG_LEVEL}"
-output = "file"
-file_path = "${WORK_ROOT}/data/logs"
+## CLI命令
+格式
+```bash
+wpgen <COMMAND> [OPTIONS]
 ```
+### 常用命令
+- rule   : Generate data by rule/基于规则生成数据
+- sample : Generate data from sample files/基于`model/wpl`下的`sample.dat`样本文件生成数据。
+- conf   : Configuration commands/配置相关命令
 
-如果输出目标依赖账号、密码或连接串，建议改用 `SEC_` 变量，并把敏感值放到 `sec_key.toml` 或其他受控外部变量源中。详细约定见：[配置变量与安全字典（`${VAR}` / `sec_key.toml`）](08-variables_and_sec_key.md)。
+### 常用参数
+- --work-root：工作根目录
+- --wpl：临时覆盖 WPL 目录
+- -c, --conf-name：生成器配置文件名
+- -n：覆盖总行数
+- -s：覆盖生成速度
+- -p, --print_stat：打印统计
+- --stat：设置统计周期
+
+### conf子命令参数
+- clean : Clean generator config/清理生成器配置
+- check : Check generator config/检查生成器配置
+
+### 示例
+- 基于样本生成数据，生成10000行，每秒1000行，并3秒打印一次统计信息：
+```bash
+wpgen sample \
+  -n 10000 \
+  -s 1000 \
+  --stat 3 \
+  -p
+```
 
 ## 动态速度模型
 
@@ -176,7 +183,6 @@ variance = 0.1
 version = "1.0"
 
 [generator]
-mode = "sample"
 count = 10000
 speed = 5000
 parallel = 2
@@ -197,10 +203,7 @@ file_path = "./logs"
 version = "1.0"
 
 [generator]
-mode = "rule"
-duration_secs = 600      # 运行 10 分钟
 parallel = 4
-rule_root = "./rules"
 
 [generator.speed_profile]
 type = "ramp"
@@ -224,8 +227,6 @@ file_path = "./logs"
 version = "1.0"
 
 [generator]
-mode = "sample"
-duration_secs = 3600     # 运行 1 小时
 parallel = 8
 
 [generator.speed_profile]

@@ -70,7 +70,7 @@ warp-console/
 
 `docker-compose.yml` 中的 `warp-parse` 服务：
 
-- 镜像：`ghcr.io/wp-labs/warp-parse:0.23.0-alpha`
+- 镜像：`ghcr.io/wp-labs/warp-parse:latest`
 - 挂载 `./wparse:/app/config`
 - 入口：`wparse deamon --work-root /app/config`
 - 暴露端口：

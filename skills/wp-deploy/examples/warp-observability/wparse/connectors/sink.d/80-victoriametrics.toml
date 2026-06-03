@@ -1,7 +1,8 @@
 [[connectors]]
 id = "victoriametrics_sink"
 type = "victoriametrics"
-allow_override = ["insert_url", "flush_interval_secs"]
+allow_override = ["endpoint", "api_path", "timeout_secs","batch_size"]
 [connectors.params]
-insert_url = "http://127.0.0.1:8428/api/v1/import/prometheus"
-flush_interval_secs = 1
+endpoint = "http://victoria-metrics:8428"
+api_path = "/api/v1/import/prometheus"
+timeout_secs = 3
