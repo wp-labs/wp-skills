@@ -12,6 +12,7 @@ triggers:
   - 让已有 source 和 sink 接起来形成完整链路
   - 询问 wpgen 或 wp-monitor 怎么配置
   - 询问 WarpParse 怎么部署或联调
+  - 卸载 wparse 相关组件
 dependencies:
   optional:
     - wparse
@@ -322,7 +323,7 @@ file = "example.json"
 
 优先参考本地材料：
 
-- `references/cli-introduce.md`：wparse、wpgen、wproj 的 CLI 使用方法和参数说明
+- `references/cli-introduce.md`：wparse、wpgen、wproj 的 CLI 使用方法和参数说明，包含了安装和卸载
 - `references/knowdb-introduce.md`：知识库配置说明和示例
 - `references/connector-introduce.md`：source / sink / sink_group 总览、常用参数整理
 - `references/wpgen.md`：`wpgen` 配置、输出接线和压测速度模型
