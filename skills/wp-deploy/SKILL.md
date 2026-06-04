@@ -26,7 +26,8 @@ dependencies:
 WarpParse 是一个高性能的 ELT 引擎，专注于日志数据的解析、处理和转发。它的核心组件包括：
 - wparse：ELT 引擎本身
 - wpgen：用于生成测试数据的工具
-- wproj: 用来管理和验证 WPL 规则的工具
+- wproj: 用来管理和验证项目配置的工具
+- wpl-check：用于检查 WPL 规则和 OML 模型的工具
 - wp-monitor：监控工具，用于监控 wparse 的运行状态和指标。
 
 **概念介绍**

@@ -8,7 +8,7 @@
 
 ```bash
 # 从官方安装
-bash <(curl -fsSL https://raw.githubusercontent.com/wp-labs/wp-skills/main/install-skill.sh) wpl-rule-check
+curl -sSf https://get.warpparse.ai/inst-x.sh | bash -s -- wpl-check
 
 # 或参考
 # https://github.com/wp-labs/wpl-check

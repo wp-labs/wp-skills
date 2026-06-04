@@ -5,6 +5,8 @@
 ```bash
 # 下面的beta可以替换成alpha、stable或具体版本号
 curl -sSf https://get.warpparse.ai/inst-x.sh | bash -s -- wparse beta
+# 下载wpl-check，与其他几个工具不在同一个仓库，需要单独下载
+curl -sSf https://get.warpparse.ai/inst-x.sh | bash -s -- wpl-check
 ```
 执行命令后会自动下载并安装 `wparse`、`wpgen`、`wproj` 3个工具，并将它们的可执行文件放在 `~/bin/` 目录下。
 - 设置环境变量：
@@ -19,14 +21,15 @@ curl -sSf https://get.warpparse.ai/inst-x.sh | bash -s -- wparse beta
 wparse -V
 wpgen -V
 wproj -V
+wpl-check -V
 ```
 如果能正确输出版本号，说明安装成功。
 
 ## 卸载
 ```bash
-which wparse wpgen wproj | xargs rm -f
+which wparse wpgen wproj wpl-check | xargs rm -f
 ```
-这条命令会找到 `wparse`、`wpgen` 和 `wproj` 的安装路径并删除它们的可执行文件。
+这条命令会找到 `wparse`、`wpgen`、`wproj` 和 `wpl-check` 的安装路径并删除它们的可执行文件。
 
 ## wparse CLI介绍
 
@@ -114,3 +117,29 @@ wproj model route \
 - 当前启用了哪些 source
 - 某个规则最终会流向哪些 sink
 - OML 是否挂在了预期链路上
+
+## wpl-check CLI介绍
+### 常用命令
+
+#### 语法检查
+
+```bash
+# 检查 WPL 语法
+wpl-check syntax models/wpl/<package>/parse.wpl
+
+# 检查 OML 语法（若工具支持）
+wpl-check syntax models/oml/<name>.oml
+```
+
+#### 样本测试
+
+```bash
+# 运行样本测试
+wpl-check sample models/wpl/<package>/parse.wpl models/wpl/<package>/sample.dat
+
+# 详细输出（显示解析结果和失败原因）
+wpl-check sample --verbose models/wpl/<package>/parse.wpl models/wpl/<package>/sample.dat
+
+# JSON 格式输出（方便程序处理）
+wpl-check sample --json models/wpl/<package>/parse.wpl models/wpl/<package>/sample.dat
+```
