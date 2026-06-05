@@ -335,5 +335,6 @@ file = "example.json"
 - `examples/warp-observability/wp-monitor/config/app.toml`
 
 ## 其他要求
-当卸载wparse时，需要卸载wparse的整套组件。
-当提供配置时，无论是否使用知识库，都要提供一个默认知识库配置。
+- 当卸载wparse时，需要卸载wparse的整套组件。
+- 如果需要发送数据来验证测试结果，需要给出wpgen命令。
+- 当提供配置时，无论是否使用知识库，都要提供一个默认知识库配置。
