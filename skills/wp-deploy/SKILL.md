@@ -308,10 +308,6 @@ file = "example.json"
 4. 启动顺序、依赖关系和验证方式
 
 
-## 其他要求
-当卸载wparse时，需要卸载wparse的整套组件。
-当提供配置时，无论是否使用知识库，都要提供一个默认知识库配置。
-
 ## 示例与参考
 
 优先参考本地材料：
@@ -338,10 +334,6 @@ file = "example.json"
 - `examples/warp-observability/wparse/topology/sinks/infra.d/monitor.toml`
 - `examples/warp-observability/wp-monitor/config/app.toml`
 
-## 不要做的事
-
-- 不要把 sink 写成和 source 一样直接挂在 topology 根下
-- 不要在实例里覆盖未出现在 `allow_override` 的参数
-- 不要只写 connector 定义，不补实例接线就声称完成
-- 不要只写 `wp-monitor` 页面地址，不补指标和日志下游
-- 不要把“配置文件存在”误判为“部署已经跑通”
+## 其他要求
+当卸载wparse时，需要卸载wparse的整套组件。
+当提供配置时，无论是否使用知识库，都要提供一个默认知识库配置。
