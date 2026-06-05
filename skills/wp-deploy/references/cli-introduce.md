@@ -63,7 +63,41 @@ wparse batch --work-root .
 - `--wpl`：临时覆盖 WPL 规则目录
 
 ## wpgen CLI介绍
-请参考 [wpgen CLI介绍](./wpgen.md)
+### CLI命令
+格式
+```bash
+wpgen <COMMAND> [OPTIONS]
+```
+#### 常用命令
+- rule   : Generate data by rule/基于规则生成数据
+- sample : Generate data from sample files/基于`model/wpl`下的`sample.dat`样本文件生成数据。
+- conf   : Configuration commands/配置相关命令
+
+#### 常用参数
+- --work-root：工作根目录
+- --wpl：临时覆盖 WPL 目录
+- -c, --conf-name：生成器配置文件名
+- -n：覆盖总行数
+- -s：覆盖生成速度
+- -p, --print_stat：打印统计
+- --stat：设置统计周期
+
+#### conf子命令参数
+- clean : Clean generator config/清理生成器配置
+- check : Check generator config/检查生成器配置
+
+#### 示例
+- 基于样本生成数据，生成10000行，每秒1000行，并3秒打印一次统计信息：
+```bash
+wpgen sample \
+  -n 10000 \
+  -s 1000 \
+  --stat 3 \
+  -p
+```
+
+### wpgen配置文件
+请参考 [wpgen介绍](./wpgen.md)
 
 ## wproj CLI介绍
 查看帮助
