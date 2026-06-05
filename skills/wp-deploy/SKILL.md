@@ -1,6 +1,6 @@
 ---
 name: wp-deploy
-description: 提供ETL引擎 WarpParse 的部署配置指导，覆盖输入、输出、监控、发送测试、 以及联调与部署接线。适用场景：帮我搭一套 wparse 工程配置、添加一个输入和输出、对ELT引擎进行压测、接入wparse监控看指标和丢失数据、补 docker compose 或部署说明。
+description: 提供ETL引擎 wparse 相关组件的部署、卸载、配置指导。覆盖输入、输出、监控、发送测试、 以及联调与部署接线。适用场景：帮我搭一套 wparse 工程配置、添加一个输入和输出、对wparse引擎进行压测、接入wparse监控看指标和丢失数据、补 docker compose 或部署说明。
 triggers:
   - 编写或修改 source 连接器
   - 编写或修改 sink 连接器
@@ -86,15 +86,6 @@ WarpParse 是一个高性能的 ELT 引擎，专注于日志数据的解析、�
 此任务已进入 WPL/OML 编写阶段，切换到 wpl-rule-check skill。
 ```
 
-## 工作原则
-
-1. 先看现有工程结构，再写配置，不猜目录。
-2. 先复用现有 connector 定义和 example，再决定是否新增类型。
-3. `connectors.params` 提供默认值，实例侧只覆盖 `allow_override` 允许的参数。
-4. `source` 独立存在；`sink` 必须挂在 `sink_group` 下。
-5. `wpgen` 用于打通测试流量，不把“有配置”误判成“链路可跑”。
-6. `wp-monitor` 依赖指标和日志落点，不能只写界面配置不补下游。
-7. 参数说明以本地 example 为准，参考文档只作辅助解释。
 
 ## 先检查什么
 
@@ -121,6 +112,7 @@ WarpParse 是一个高性能的 ELT 引擎，专注于日志数据的解析、�
 - 补测试流量：修改 `conf/wpgen.toml`
 - 补观测：修改 `topology/sinks/infra.d/monitor.toml`、`wp-monitor/config/app.toml` 或部署文件
 - 新增完整链路：同时补 connector、topology、wpgen、monitor 和部署说明
+- 使用wpgen进行链路验证或压测：修改 `conf/wpgen.toml`，并说明如何启动和验证
 
 ### 2. 编写 source
 
@@ -224,11 +216,7 @@ file = "example.json"
 
 ### 5. 接入 wpgen
 
-当用户不仅要“写配置”，还要“把链路跑起来”时，优先考虑 `wpgen`：
-
-- 需要稳定、可控地向某个入口发送测试数据
-- 需要做 sample 回放、恒定速率压测或突发流量验证
-- 需要绕过真实上游，先验证接入和下游输出
+当用户需要进行链路验证或者压测时，请使用`wpgen`。
 
 使用要点：
 
@@ -318,6 +306,11 @@ file = "example.json"
 2. 每个文件的作用
 3. 为什么这样接线和部署
 4. 启动顺序、依赖关系和验证方式
+
+
+## 其他要求
+当卸载wparse时，需要卸载wparse的整套组件。
+当提供配置时，无论是否使用知识库，都要提供一个默认知识库配置。
 
 ## 示例与参考
 
