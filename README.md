@@ -99,6 +99,34 @@ Optional tools that enhance the skill's capabilities:
 | `wpgen` | 数据生成工具 | Included with WarpParse |
 | `wpl-check` | WPL 离线验证 | [GitHub](https://github.com/wp-labs/wpl-check) |
 
+## Configuration Generation
+
+Generated WarpParse project configuration should use `wproj` as the standard path. Do not hand-assemble equivalent `conf/`, `connectors/`, `topology/`, or `models/knowledge/` files for a new generated project.
+
+Initialize a local project:
+
+```bash
+wproj init --work-root .
+wproj check --work-root . --what all --fail-fast
+```
+
+Initialize from a remote project source:
+
+```bash
+wproj init --work-root . --repo <repo-url> --version <version>
+wproj check --work-root . --what all --fail-fast
+```
+
+Update or regenerate remote-backed configuration:
+
+```bash
+wproj conf update --work-root . --group models --version <version>
+wproj conf update --work-root . --group infra --version <version>
+wproj check --work-root . --what all --fail-fast
+```
+
+Skill-generated deployment documentation should include the exact `wproj` command used so the same configuration can be regenerated and validated consistently.
+
 ## Contributing
 
 To add a new skill:

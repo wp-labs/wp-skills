@@ -27,7 +27,7 @@ dependencies:
 WarpParse 是一个高性能的 ELT 引擎，专注于日志数据的解析、处理和转发。它的核心组件包括：
 - wparse：ELT 引擎本身
 - wpgen：用于生成测试数据的工具
-- wproj: 用来管理和验证项目配置的工具
+- wproj: 用来初始化、同步、生成和验证项目配置的工具
 - wpl-check：用于检查 WPL 规则和 OML 模型的工具
 - wp-monitor：监控工具，用于监控 wparse 的运行状态和指标。
 
@@ -44,11 +44,12 @@ WarpParse 是一个高性能的 ELT 引擎，专注于日志数据的解析、�
 它主要处理 5 类问题：
 
 1. 下载wparse的各类工具
-2. 选择合适的 source / sink 类型并编写 connector 定义和实例
-3. 编写 wparse 知识库配置。
-4. 为链路补 `wpgen` 回放或压测配置
-5. 为链路补 `wp-monitor` 与 `victoria-metrics` / `victoria-logs` 观测配置
-6. 基于本地 examples 输出可执行的部署和启动方式
+2. 使用 `wproj` 初始化、同步或再生成工程配置基线
+3. 选择合适的 source / sink 类型，并基于 `wproj` 生成的工程结构做必要的局部调整
+4. 检查或补充 wparse 知识库配置
+5. 为链路补 `wpgen` 回放或压测配置
+6. 为链路补 `wp-monitor` 与 `victoria-metrics` / `victoria-logs` 观测配置
+7. 基于 `wproj` 生成工程输出可执行的部署和启动方式，可参考本地 examples 解释接线
 
 ## 职责边界
 
@@ -56,13 +57,16 @@ WarpParse 是一个高性能的 ELT 引擎，专注于日志数据的解析、�
 
 - 解释 `connectors`、`sources`、`sink_group`、`infra` 的关系
 - 选择合适的 source / sink 类型，例如 `file`、`tcp`、`kafka`、`syslog`、`http`
-- 编写 `connectors/source.d/*.toml` 与 `connectors/sink.d/*.toml`
-- 编写 `topology/sources/wpsrc.toml` 与 `topology/sinks/**/*.toml`
-- 编写或检查 `conf/wparse.toml`
+- 通过 `wproj init` 或 `wproj conf update` 生成或更新工程配置基线
+- 基于 `wproj` 生成结果，检查或局部调整 `connectors/source.d/*.toml` 与 `connectors/sink.d/*.toml`
+- 基于 `wproj` 生成结果，检查或局部调整 `topology/sources/wpsrc.toml` 与 `topology/sinks/**/*.toml`
+- 检查 `conf/wparse.toml`
 - 为 source / sink 链路补充 `wpgen` 配置
 - 为链路补充 `wp-monitor`、`victoria-metrics`、`victoria-logs` 的接线方式
 - 输出 `docker compose` 或最小部署步骤
 - 检查 `allow_override`、目录结构、端口、依赖和接线关系是否一致
+- 输出本次使用的 `wproj` 命令，说明如何用同一命令再生成或更新配置
+- 当用户要求“给一个示例”时，在用户指定目录或临时演示目录中通过 `wproj` 创建可运行工程；仓库内 `examples/` 只作为只读参考，不作为运行目录交付
 
 ### 本 skill 不处理
 
@@ -70,6 +74,8 @@ WarpParse 是一个高性能的 ELT 引擎，专注于日志数据的解析、�
 - OML 富化模型编写、修改、调试
 - 日志样本字段提取逻辑设计
 - 纯业务字段语义判断
+- 在新工程中手工拼装 `conf/`、`connectors/`、`topology/`、`models/knowledge/` 等核心配置目录来替代 `wproj`
+- 把已安装 skill 目录下的 `examples/` 当成用户项目目录运行，或要求用户直接修改 skill 自带示例文件
 
 ### 强制路由
 
@@ -91,6 +97,10 @@ WarpParse 是一个高性能的 ELT 引擎，专注于日志数据的解析、�
 
 开始修改前，优先确认这些信息：
 
+- `wproj` 是否已安装：`wproj --version`
+- 当前任务是生成新工程、同步远端配置，还是修改已有工程
+- 如果是新工程，应该使用哪条 `wproj init` 命令
+- 如果是同步远端配置，应该使用哪条 `wproj conf update` 命令
 - 当前项目是否已有 `connectors/source.d` / `connectors/sink.d`
 - 当前项目是否已有 `topology/sources` / `topology/sinks`
 - 当前项目是否已有 `conf/wparse.toml` 与 `conf/wpgen.toml`
@@ -101,6 +111,48 @@ WarpParse 是一个高性能的 ELT 引擎，专注于日志数据的解析、�
 - 是否需要本地联调、压测、观测或 docker compose
 
 ## 标准工作流
+
+### 0. 先通过 wproj 建立工程配置基线
+
+凡是“生成项目”“搭一套工程”“创建部署配置”“补完整链路”这类任务，必须先走 `wproj`，不得直接手工创建等价的核心项目配置文件。
+
+本地初始化：
+
+```bash
+wproj init --work-root .
+```
+
+按模式初始化：
+
+```bash
+wproj init --work-root . --mode full
+wproj init --work-root . --mode normal
+wproj init --work-root . --mode model
+wproj init --work-root . --mode conf
+wproj init --work-root . --mode data
+```
+
+从远端项目源初始化：
+
+```bash
+wproj init --work-root . --repo <repo-url> --version <version>
+```
+
+生成或更新后立即检查：
+
+```bash
+wproj check --work-root . --what all --fail-fast
+```
+
+如果本地没有 `wproj`，先给出安装命令并停止生成配置；不要用手写文件绕过：
+
+```bash
+curl -sSf https://get.warpparse.ai/inst-x.sh | bash -s -- wparse beta
+export PATH="$HOME/bin:$PATH"
+wproj --version
+```
+
+交付时必须写明本次使用或要求用户执行的 `wproj` 命令。后续 source、sink、wpgen、monitor 的配置只能作为 `wproj` 生成基线上的局部调整，并且最后重新执行 `wproj check`。
 
 ### 1. 判定修改层级
 
@@ -114,7 +166,9 @@ WarpParse 是一个高性能的 ELT 引擎，专注于日志数据的解析、�
 - 新增完整链路：同时补 connector、topology、wpgen、monitor 和部署说明
 - 使用wpgen进行链路验证或压测：修改 `conf/wpgen.toml`，并说明如何启动和验证
 
-### 2. 编写 source
+如果是新工程或可由 `wproj init` / `wproj conf update` 再生成的配置，先输出并执行对应 `wproj` 命令，再做必要局部调整。
+
+### 2. 检查和局部调整 source
 
 source 一般分两部分：
 
@@ -122,6 +176,8 @@ source 一般分两部分：
 2. source 实例
 
 模板：
+
+以下模板只用于审查或局部调整 `wproj` 生成结果，不用于绕过 `wproj` 手工生成新工程。
 
 ```toml
 [[connectors]]
@@ -153,7 +209,7 @@ file = "sample.dat"
 - `sources.params` 只能覆盖 `allow_override` 里的键
 - `key` 要唯一
 
-### 3. 编写 sink 与 sink_group
+### 3. 检查和局部调整 sink 与 sink_group
 
 sink 分两部分：
 
@@ -161,6 +217,8 @@ sink 分两部分：
 2. `sink_group` 中的 sink 实例
 
 模板：
+
+以下模板只用于审查或局部调整 `wproj` 生成结果，不用于绕过 `wproj` 手工生成新工程。
 
 ```toml
 [[connectors]]
@@ -196,7 +254,7 @@ file = "example.json"
 - 实例覆盖参数必须在 `allow_override` 中
 - `rule` 和 `oml` 至少有一个，且不能同时存在
 
-### 4. 编写 wparse 工程入口
+### 4. 检查 wparse 工程入口
 
 `conf/wparse.toml` 至少要检查：
 
@@ -282,17 +340,20 @@ file = "example.json"
 
 ## 完成标准
 
-编写后，必须使用wproj进行验证。
+生成或修改项目配置后，必须使用 `wproj` 进行验证。
 
 结束前至少要给出以下结果中的一种：
 
-1. 一组完整可落地的部署配置，覆盖 connector + topology + `wparse.toml`
+1. 一组由 `wproj` 初始化、同步或更新得到的完整可落地部署配置，覆盖 connector + topology + `wparse.toml`
 2. 对现有 source / sink / `wpgen` / `wp-monitor` 配置的精确修改
 3. 明确指出当前链路哪里没有接上，缺少什么依赖
 
 如果做了配置修改，还应说明：
 
 - 改了哪些文件
+- 用了哪条 `wproj init` 或 `wproj conf update` 命令生成/更新配置
+- 如何用同一条 `wproj` 命令再生成或更新配置
+- `wproj check --work-root . --what all --fail-fast` 是否通过
 - source、sink、`wpgen`、`wp-monitor` 是怎么接起来的
 - 哪些参数来自默认定义，哪些参数在实例侧覆盖
 - 业务数据、监控数据、miss 数据分别落到哪里
@@ -303,9 +364,10 @@ file = "example.json"
 优先输出：
 
 1. 变更后的配置文件路径
-2. 每个文件的作用
-3. 为什么这样接线和部署
-4. 启动顺序、依赖关系和验证方式
+2. 使用过或需要执行的 `wproj` 生成、更新、验证命令
+3. 每个文件的作用
+4. 为什么这样接线和部署
+5. 启动顺序、依赖关系和验证方式
 
 
 ## 示例与参考
@@ -318,8 +380,8 @@ file = "example.json"
 - `references/wpgen.md`：`wpgen` 配置、输出接线和压测速度模型
 - `references/wp-monitor.md`：`wp-monitor` 配置、监控 sink 接入和观测依赖
 - `references/warp-console-observability.md`：从 `warp-console` 提炼出的日志解析 + 观测 + 部署主线
-- `examples/file_to_file/`：最小 file source -> file sink -> `wparse` 示例
-- `examples/warp-observability/`：带 `wpgen`、`wp-monitor` 和观测依赖的部署示例
+- `examples/file_to_file/`：最小 file source -> file sink -> `wparse` 只读参考示例
+- `examples/warp-observability/`：带 `wpgen`、`wp-monitor` 和观测依赖的只读参考示例
 
 示例目录中的关键文件：
 

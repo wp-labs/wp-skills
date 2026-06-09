@@ -42,18 +42,18 @@ wparse --help
 启动常驻实例：
 
 ```bash
-wparse daemon --work-root .
+wparse daemon --work-root "$(pwd)"
 ```
 
 执行批处理：
 
 ```bash
-wparse batch --work-root .
+wparse batch --work-root "$(pwd)"
 ```
 
 ### 常用参数
 
-- `--work-root`：工程根目录
+- `--work-root`：工程根目录；当前版本建议传绝对路径，例如 `"$(pwd)"`
 - `-n, --max-line`：限制本次最多处理的行数
 - `-w, --parse-workers`：指定解析 worker 数
 - `--stat`：设置统计输出周期
@@ -104,6 +104,39 @@ wpgen sample \
 ```bash
 wproj --help
 ```
+
+### 初始化和生成工程配置
+
+新建或生成 WarpParse 工程配置时，先使用 `wproj` 建立配置基线，不要手工拼装 `conf/`、`connectors/`、`topology/`、`models/knowledge/` 等核心目录。
+
+本地初始化：
+
+```bash
+wproj init --work-root .
+```
+
+指定初始化模式：
+
+```bash
+wproj init --work-root . --mode full
+wproj init --work-root . --mode normal
+wproj init --work-root . --mode model
+wproj init --work-root . --mode conf
+wproj init --work-root . --mode data
+```
+
+从远端项目源初始化，并固定目标版本：
+
+```bash
+wproj init --work-root . --repo <repo-url> --version <version>
+```
+
+初始化后立即检查：
+
+```bash
+wproj check --work-root . --what all --fail-fast
+```
+交付部署配置时，应记录实际执行过的 `wproj init`  命令，方便后续用同一命令再生成或升级配置。
 
 ### 批量检查工程
 检查整个项目：

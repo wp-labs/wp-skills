@@ -2,7 +2,7 @@
   "name": "wp-deploy",
   "version": "1.0.0",
   "display_name": "WarpParse 部署配置指导",
-  "description": "指导 WarpParse 的 source/sink/connectors/topology、wpgen、wp-monitor 与联调部署配置",
+  "description": "指导通过 wproj 生成 WarpParse 配置基线，并配置 source/sink/connectors/topology、wpgen、wp-monitor 与联调部署",
   "author": "wp-labs",
   "license": "MIT",
   "platforms": [
@@ -22,14 +22,19 @@
       "source",
       "sink",
       "connector",
+      "wproj",
       "wpgen",
       "wp-monitor",
+      "文件到文件",
       "docker compose",
       "联调",
       "观测"
     ],
     "patterns": [
       "怎么部署.*WarpParse",
+      "怎么生成.*配置",
+      "帮我搭.*工程",
+      "安装.*wparse.*文件.*文件",
       "帮我配.*source",
       "帮我配.*sink",
       "怎么接.*wpgen",
@@ -72,6 +77,7 @@
       "openai": "agents/openai.yaml"
     },
     "references": [
+      "references/cli-introduce.md",
       "references/connector-introduce.md",
       "references/wpgen.md",
       "references/wp-monitor.md",
