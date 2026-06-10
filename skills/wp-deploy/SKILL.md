@@ -13,11 +13,13 @@ triggers:
   - 询问 wpgen 或 wp-monitor 怎么配置
   - 询问 WarpParse 怎么部署或联调
   - 卸载 wparse 相关组件
+  - 卸载 wp-monitor / victoria-metrics / victoria-logs 观测栈
 dependencies:
   optional:
     - wparse
     - wproj
     - wpgen
+    - wpl-check
     - wp-monitor
   docs:
     - docs.warpparse.ai
@@ -41,7 +43,7 @@ WarpParse 是一个高性能的 ELT 引擎，专注于日志数据的解析、�
 
 # WarpParse 部署配置指导
 
-它主要处理 5 类问题：
+它主要处理 6 类问题：
 
 1. 下载wparse的各类工具
 2. 使用 `wproj` 初始化、同步或再生成工程配置基线
@@ -70,6 +72,8 @@ WarpParse 是一个高性能的 ELT 引擎，专注于日志数据的解析、�
 - 输出测试数据发送或回放方式时，必须使用 `wpgen` 配置和命令；不要生成自定义 Python / Node / Bash sender、`nc` 循环、`curl` 循环等替代方案
 - 输出部署或联调方案时，必须默认部署 `wp-monitor` 观测栈，并给出 monitor 侧的健康、解析、miss、source/sink 检查项
 - 最终总结必须包含“wp-monitor 闭环状态”：明确 `wp-monitor` 是已部署并看到数据，还是未部署导致观测闭环未完成；不能只输出业务文件落点后就结束
+- 交付部署或示例工程时，必须把 `wpl-check` 作为部署要求准备好；它由 `wp-deploy` 控制安装、镜像配置和卸载生命周期，并供 `wpl-rule-check` 消费
+- 卸载 `wparse` 相关组件时，必须同时处理本地二进制、`wpl-check` 验证物料和已部署的 `wp-monitor` 观测栈
 
 ### 本 skill 不处理
 
@@ -304,7 +308,46 @@ wpgen sample --work-root "$(pwd)" -n 10000 -s 1000 --stat 3 -p
 
 如果任务涉及 `wpgen`，优先参考：`references/wpgen.md`
 
-### 6. 接入 wp-monitor
+### 6. 接入 wpl-check 规则验证资产
+
+`wpl-rule-check` 是规则编写 skill，`wpl-check` 是它执行验证时消费的运行时工具。`wpl-check` 的安装、容器镜像配置、版本选择和卸载由 `wp-deploy` 控制；`wp-deploy` 不负责写 WPL/OML，但部署或示例工程交付时必须把验证资产准备好，并说明如何验证已有规则。
+
+本地二进制安装和版本检查：
+
+```bash
+curl -sSf https://get.warpparse.ai/inst-x.sh | bash -s -- wpl-check
+export PATH="$HOME/bin:$PATH"
+wpl-check -V
+```
+
+推荐版本配置：
+
+```bash
+export WPL_CHECK_VERSION="${WPL_CHECK_VERSION:-v0.2.0}"
+export WPL_CHECK_IMAGE="${WPL_CHECK_IMAGE:-ghcr.io/wp-labs/wpl-check:${WPL_CHECK_VERSION}}"
+```
+
+本地验证命令：
+
+```bash
+wpl-check syntax models/wpl/<package>/parse.wpl
+wpl-check sample models/wpl/<package>/parse.wpl models/wpl/<package>/sample.dat
+```
+
+容器化验证路径必须通过 `WPL_CHECK_IMAGE` 明确镜像来源；如果镜像无法拉取，说明失败证据并回退到本地二进制验证：
+
+```bash
+docker pull "$WPL_CHECK_IMAGE"
+docker run --rm \
+  --name wpl-check \
+  -v "$(pwd):/work" \
+  -w /work \
+  "$WPL_CHECK_IMAGE" syntax models/wpl/<package>/parse.wpl
+```
+
+如果用户要求编写或修改 WPL/OML，必须切换到 `wpl-rule-check`；如果只是部署验证已有规则，则留在 `wp-deploy` 并使用上面的 `wpl-check` 命令。
+
+### 7. 接入 wp-monitor
 
 当用户需要部署、联调或判断链路是否真的工作正常，而不是只看配置语法时，必须默认部署 `wp-monitor`：
 
@@ -397,7 +440,74 @@ wp-monitor 闭环状态：
 
 如果任务涉及观测或监控联调，优先参考：`references/wp-monitor.md`
 
-### 7. 给出部署方式
+### 8. 卸载 wparse 相关组件
+
+当用户要求“卸载 wparse”“清理 wparse 环境”“删除 WarpParse 部署”时，不能只删除二进制。因为 `wp-monitor` 已经是部署闭环的一部分，卸载必须覆盖：
+
+1. 本地命令行工具：`wparse`、`wpgen`、`wproj`、`wpl-check`
+2. 规则验证物料：`wpl-check` 临时容器、`WPL_CHECK_IMAGE` 对应镜像
+3. 观测栈容器：`wp-monitor`、`victoria-metrics`、`victoria-logs`
+4. 如果由同一部署启动，也要停止 `warp-parse`
+5. 默认保留数据卷、项目配置和镜像；只有用户明确要求“彻底清理/删除数据/删除镜像”时才删除
+
+卸载前先盘点：
+
+```bash
+which wparse wpgen wproj wpl-check || true
+docker ps -a --filter "name=wp-monitor" --filter "name=victoria-metrics" --filter "name=victoria-logs" --filter "name=warp-parse" --filter "name=wpl-check"
+docker images --format '{{.Repository}}:{{.Tag}}' | grep -E 'wpl-check|wp-labs/wpl-check' || true
+docker compose ps 2>/dev/null || true
+```
+
+如果当前目录有部署用的 `docker-compose.yml`，优先按 compose 项目停止：
+
+```bash
+docker compose down
+```
+
+如果没有 compose 文件，或这些容器是用固定容器名直接启动的，按容器名停止并删除：
+
+```bash
+docker rm -f wp-monitor victoria-metrics victoria-logs warp-parse wpl-check 2>/dev/null || true
+```
+
+再删除本地二进制：
+
+```bash
+for bin in wparse wpgen wproj wpl-check; do
+  path="$(command -v "$bin" 2>/dev/null || true)"
+  if [ -n "$path" ]; then
+    rm -f "$path"
+  fi
+done
+```
+
+验证卸载结果：
+
+```bash
+command -v wparse wpgen wproj wpl-check || true
+docker ps -a --filter "name=wp-monitor" --filter "name=victoria-metrics" --filter "name=victoria-logs" --filter "name=warp-parse" --filter "name=wpl-check"
+```
+
+彻底清理需要用户明确确认后才能执行：
+
+```bash
+docker compose down -v --rmi local
+docker volume rm <metrics_volume> <logs_volume>
+export WPL_CHECK_VERSION="${WPL_CHECK_VERSION:-v0.2.0}"
+export WPL_CHECK_IMAGE="${WPL_CHECK_IMAGE:-ghcr.io/wp-labs/wpl-check:${WPL_CHECK_VERSION}}"
+docker image rm ghcr.io/wp-labs/wp-monitor:latest victoriametrics/victoria-metrics:v1.133.0 victoriametrics/victoria-logs:v1.43.0 "$WPL_CHECK_IMAGE"
+```
+
+卸载结果必须明确说明：
+
+- 删除了哪些二进制
+- 停止并删除了哪些容器，包括 `wpl-check`、`wp-monitor`、`victoria-metrics`、`victoria-logs`
+- 是否保留或删除了 `WPL_CHECK_IMAGE` 对应镜像
+- 是否保留了 metrics/logs 数据卷
+- 是否保留了项目配置、镜像和业务输出文件
+
+### 9. 给出部署方式
 
 当用户要求部署或联调落地时，至少要交付下面其中一种：
 
@@ -498,7 +608,7 @@ wp-monitor 闭环状态：
 - `examples/warp-observability/wp-monitor/config/app.toml`
 
 ## 其他要求
-- 当卸载wparse时，需要卸载wparse的整套组件（二进制）。
+- 当卸载wparse时，需要卸载wparse的整套组件：二进制 + `wpl-check` 验证物料 + `wp-monitor` 观测栈容器；数据卷和镜像默认保留，除非用户明确要求彻底清理。
 - 如果需要发送数据来验证测试结果，必须给出 `wpgen` 命令，不要生成自定义 sender 脚本。
 - 如果给出部署或联调方案，必须包含 `wp-monitor` 配置或启动说明，以及 monitor 侧验证项。
 - 当提供配置时，无论是否使用知识库，都要提供一个默认知识库配置。

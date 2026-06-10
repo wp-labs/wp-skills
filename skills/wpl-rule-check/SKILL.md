@@ -29,7 +29,7 @@ dependencies:
 - 编写 WPL 解析规则（`parse.wpl`）
 - 编写 OML 富化模型（`.oml`）
 - 解释 WPL/OML 语法和语义
-- 用 `wpl-check` 验证规则是否正确
+- 消费已由 `wp-deploy` 准备好的 `wpl-check` 来验证规则是否正确
 - 调试规则匹配失败（字段缺失、类型错误等）
 - 针对特定字段提取需求调整规则
 
@@ -39,6 +39,7 @@ dependencies:
 - 工程目录初始化（`wproj init`）
 - source/sink/connector 配置
 - `wpgen` / `wp-monitor` 配置
+- `wpl-check` 安装、容器镜像配置、版本选择和卸载生命周期
 - 生产部署和 rollout 策略
 - 监控运维和故障排查
 
@@ -120,6 +121,8 @@ business_field2 = read(f2);
 **不得跳过，不得让用户自己跑：**
 
 ```bash
+# 0. 确认 wp-deploy 已经准备好 wpl-check 运行时
+command -v wpl-check
 # 在当前工作目录创建测试文件
 # 1. 语法检查
 wpl-check syntax parse.wpl

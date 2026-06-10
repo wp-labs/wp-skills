@@ -182,6 +182,22 @@ wp-monitor 闭环状态：
 3. `wp-monitor/config/app.toml` 的 `vm_base_url` 是否指向正确地址
 4. miss 查询是否需要 `victoria-logs` 或 `miss_file_path`
 
+## 卸载观测栈
+
+`wp-monitor`、`victoria-metrics`、`victoria-logs` 是部署闭环的一部分。卸载 `wparse` 环境时，需要同时停止这些组件：
+
+```bash
+docker compose down
+```
+
+如果没有 compose 文件，按固定容器名清理：
+
+```bash
+docker rm -f wp-monitor victoria-metrics victoria-logs warp-parse 2>/dev/null || true
+```
+
+默认保留 metrics/logs 数据卷和镜像。只有用户明确要求删除数据时，才执行 `docker compose down -v`、`docker volume rm` 或 `docker image rm`。
+
 ## wparse接入指标到victoriametrics
 
 - 提供一个victoriametrics连接器`wparse/connectors/sink.d/victoriametrics.toml`,内容如下：

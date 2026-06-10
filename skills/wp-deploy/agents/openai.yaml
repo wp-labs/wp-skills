@@ -39,6 +39,9 @@ prompts:
     - 如果本地没有 wproj，先给出安装命令并停止生成配置，不用手写文件绕过
     - 对已有工程只能在 wproj 生成基线上做必要的局部调整
     - 交付时必须包含确切的 wproj 命令，例如 wproj init --work-root .、wproj conf update --work-root . --group models --version <version>、wproj check --work-root . --what all --fail-fast
+    - wpl-check 是部署要求的运行时资产，由 wp-deploy 控制安装、镜像配置、版本选择和卸载生命周期，并供 wpl-rule-check 执行规则验证时消费
+    - 部署或示例工程包含已有 WPL/OML 时，必须说明 wpl-check 本地二进制验证路径和容器化验证路径；容器镜像通过 WPL_CHECK_IMAGE 配置，默认版本通过 WPL_CHECK_VERSION 配置
+    - 不负责在 wp-deploy 中编写 WPL/OML；遇到规则编写或修改要切换到 wpl-rule-check，但部署验证已有规则时仍要准备 wpl-check 资产并给出验证命令
     - 发送测试数据、样本回放、联调灌流量、压测时，必须使用 wpgen；不得生成 Python / Node / Bash sender、nc 循环、curl 循环或 while read 临时脚本来替代 wpgen
     - 交付时必须包含确切的 wpgen 命令，例如 wpgen conf check --work-root "$(pwd)"、wpgen sample --work-root "$(pwd)" -n 10000 -s 1000 --stat 3 -p
     - 部署或联调方案必须默认主动部署 wp-monitor 观测栈；不能只给“后续可启动”的说明
@@ -50,6 +53,9 @@ prompts:
     - 最终回答必须包含“wp-monitor 闭环状态”段：部署状态、访问地址、是否看到 source/parse/sink 数据、miss 状态、未完成原因
     - 如果 wp-monitor 未部署或未验证，最终回答必须写“业务链路已完成，监控闭环未完成”，不能写“完整闭环已完成”；但除非有明确阻塞证据，不允许停在未部署状态
     - docker compose 观测链路应包含或说明 warp-parse、victoria-metrics、victoria-logs、wp-monitor 的关系
+    - 用户要求卸载 wparse / 清理 WarpParse 环境时，必须同时处理本地二进制、wpl-check 验证物料和部署组件：wparse、wpgen、wproj、wpl-check、wpl-check 容器、warp-parse、wp-monitor、victoria-metrics、victoria-logs
+    - 卸载时优先 docker compose down；没有 compose 文件时按容器名 docker rm -f wp-monitor victoria-metrics victoria-logs warp-parse wpl-check；然后删除本地二进制
+    - 卸载默认保留 metrics/logs 数据卷、项目配置、镜像、WPL_CHECK_IMAGE 和业务输出文件；只有用户明确要求彻底清理或删除数据/镜像时，才允许执行 docker compose down -v、docker volume rm 或 docker image rm
     - 先看现有目录和 references，再决定改哪一层配置；examples 只能作为只读参考，不能作为用户项目运行目录
     - 不得 cd 到 ~/.claude/skills、~/.codex/skills 或本仓库 skills/wp-deploy/examples 下运行示例，也不得要求用户修改 skill 自带示例文件
     - 能复用已有 connector 定义时，不新造命名
@@ -81,6 +87,9 @@ triggers:
     - "回放.*样本"
     - "压测"
     - "观测.*验证"
+    - "卸载.*wparse"
+    - "清理.*WarpParse"
+    - "删除.*wp-monitor"
     - "怎么把.*链路跑起来"
     - "生成.*配置"
     - "搭.*工程"

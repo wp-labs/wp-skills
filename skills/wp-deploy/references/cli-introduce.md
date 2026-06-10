@@ -25,11 +25,78 @@ wpl-check -V
 ```
 如果能正确输出版本号，说明安装成功。
 
-## 卸载
+### wpl-check 容器化验证资产
+
+本地二进制是首选验证路径；如果需要容器化验证，通过环境变量明确镜像和版本：
+
 ```bash
-which wparse wpgen wproj wpl-check | xargs rm -f
+export WPL_CHECK_VERSION="${WPL_CHECK_VERSION:-v0.2.0}"
+export WPL_CHECK_IMAGE="${WPL_CHECK_IMAGE:-ghcr.io/wp-labs/wpl-check:${WPL_CHECK_VERSION}}"
+docker pull "$WPL_CHECK_IMAGE"
 ```
-这条命令会找到 `wparse`、`wpgen`、`wproj` 和 `wpl-check` 的安装路径并删除它们的可执行文件。
+
+容器化语法检查示例：
+
+```bash
+docker run --rm \
+  --name wpl-check \
+  -v "$(pwd):/work" \
+  -w /work \
+  "$WPL_CHECK_IMAGE" syntax models/wpl/<package>/parse.wpl
+```
+
+## 卸载
+
+`wp-monitor` 已经是部署闭环的一部分，因此卸载 `wparse` 相关环境时，先停止部署组件，再删除本地二进制。默认保留数据卷、项目配置和镜像。
+
+卸载前盘点：
+
+```bash
+which wparse wpgen wproj wpl-check || true
+docker ps -a --filter "name=wp-monitor" --filter "name=victoria-metrics" --filter "name=victoria-logs" --filter "name=warp-parse" --filter "name=wpl-check"
+docker images --format '{{.Repository}}:{{.Tag}}' | grep -E 'wpl-check|wp-labs/wpl-check' || true
+docker compose ps 2>/dev/null || true
+```
+
+如果当前工程目录有 `docker-compose.yml`，优先停止 compose 栈：
+
+```bash
+docker compose down
+```
+
+如果没有 compose 文件，或容器是用固定名称启动的，按容器名停止并删除：
+
+```bash
+docker rm -f wp-monitor victoria-metrics victoria-logs warp-parse wpl-check 2>/dev/null || true
+```
+
+删除本地二进制：
+
+```bash
+for bin in wparse wpgen wproj wpl-check; do
+  path="$(command -v "$bin" 2>/dev/null || true)"
+  if [ -n "$path" ]; then
+    rm -f "$path"
+  fi
+done
+```
+
+验证卸载结果：
+
+```bash
+command -v wparse wpgen wproj wpl-check || true
+docker ps -a --filter "name=wp-monitor" --filter "name=victoria-metrics" --filter "name=victoria-logs" --filter "name=warp-parse" --filter "name=wpl-check"
+```
+
+彻底清理数据卷和镜像前必须确认用户明确要求删除数据：
+
+```bash
+docker compose down -v --rmi local
+docker volume rm <metrics_volume> <logs_volume>
+export WPL_CHECK_VERSION="${WPL_CHECK_VERSION:-v0.2.0}"
+export WPL_CHECK_IMAGE="${WPL_CHECK_IMAGE:-ghcr.io/wp-labs/wpl-check:${WPL_CHECK_VERSION}}"
+docker image rm ghcr.io/wp-labs/wp-monitor:latest victoriametrics/victoria-metrics:v1.133.0 victoriametrics/victoria-logs:v1.43.0 "$WPL_CHECK_IMAGE"
+```
 
 ## wparse CLI介绍
 

@@ -29,6 +29,8 @@
       "发送测试数据",
       "样本回放",
       "观测验证",
+      "卸载",
+      "清理",
       "docker compose",
       "联调",
       "观测"
@@ -46,6 +48,9 @@
       "回放.*样本",
       "观测.*验证",
       "怎么.*看.*miss",
+      "卸载.*wparse",
+      "清理.*WarpParse",
+      "删除.*wp-monitor",
       "如何.*联调",
       "怎么把.*链路跑起来"
     ]
@@ -71,6 +76,11 @@
         "name": "wp-monitor",
         "description": "WarpParse 观测界面",
         "url": "https://get.warpparse.ai"
+      },
+      {
+        "name": "wpl-check",
+        "description": "WPL/OML 离线验证工具",
+        "url": "https://github.com/wp-labs/wpl-check"
       }
     ]
   },

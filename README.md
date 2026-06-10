@@ -99,6 +99,14 @@ Optional tools that enhance the skill's capabilities:
 | `wpgen` | 数据生成工具 | Included with WarpParse |
 | `wpl-check` | WPL 离线验证 | [GitHub](https://github.com/wp-labs/wpl-check) |
 
+`wpl-check` can be used as a local binary or through a configured container image:
+
+```bash
+curl -sSf https://get.warpparse.ai/inst-x.sh | bash -s -- wpl-check
+export WPL_CHECK_VERSION="${WPL_CHECK_VERSION:-v0.2.0}"
+export WPL_CHECK_IMAGE="${WPL_CHECK_IMAGE:-ghcr.io/wp-labs/wpl-check:${WPL_CHECK_VERSION}}"
+```
+
 ## Configuration Generation
 
 Generated WarpParse project configuration should use `wproj` as the standard path. Do not hand-assemble equivalent `conf/`, `connectors/`, `topology/`, or `models/knowledge/` files for a new generated project.
@@ -132,6 +140,8 @@ Skill-generated deployment documentation should include the exact `wproj` comman
 Generated workflows should use `wpgen` for sample replay and test data injection. Do not generate ad hoc sender scripts for this step.
 
 ```bash
+wpl-check syntax models/wpl/<package>/parse.wpl
+wpl-check sample models/wpl/<package>/parse.wpl models/wpl/<package>/sample.dat
 wpgen conf check --work-root "$(pwd)"
 wpgen sample --work-root "$(pwd)" -n 10000 -s 1000 --stat 3 -p
 ```
