@@ -83,13 +83,23 @@ wpgen <COMMAND> [OPTIONS]
 - --stat：设置统计周期
 
 #### conf子命令参数
+- init  : Initialize generator config/初始化 `conf/wpgen.toml`
 - clean : Clean generator config/清理生成器配置
 - check : Check generator config/检查生成器配置
+
+#### 标准验证命令
+
+```bash
+wpgen conf check --work-root "$(pwd)"
+wpgen sample --work-root "$(pwd)" -n 10000 -s 1000 --stat 3 -p
+```
+
+生成部署或联调工作流时，测试数据发送必须走 `wpgen`。不要生成 Python / Node / Bash sender、`nc` 循环、`curl` 循环等临时脚本来替代 `wpgen`。
 
 #### 示例
 - 基于样本生成数据，生成10000行，每秒1000行，并3秒打印一次统计信息：
 ```bash
-wpgen sample \
+wpgen sample --work-root "$(pwd)" \
   -n 10000 \
   -s 1000 \
   --stat 3 \

@@ -2,6 +2,8 @@
 
 wpgen 是数据生成工具，用于按照规则或样本生成测试数据。
 
+在生成的部署或联调工作流中，测试数据发送、样本回放和压测必须统一走 `wpgen`。不要生成 Python / Node / Bash sender、`nc` 循环、`curl` 循环或其他临时脚本来替代 `wpgen`。
+
 ## 基础配置
 
 配置文件路径：`conf/wpgen.toml`
@@ -49,13 +51,42 @@ wpgen <COMMAND> [OPTIONS]
 - --stat：设置统计周期
 
 ### conf子命令参数
+- init  : Initialize generator config/初始化 `conf/wpgen.toml`
 - clean : Clean generator config/清理生成器配置
 - check : Check generator config/检查生成器配置
+
+### 标准验证命令
+
+检查 `conf/wpgen.toml`：
+
+```bash
+wpgen conf check --work-root "$(pwd)"
+```
+
+如果工程缺少 `conf/wpgen.toml`，先生成默认配置：
+
+```bash
+wpgen conf init --work-root "$(pwd)"
+```
+
+基于样本回放测试数据：
+
+```bash
+wpgen sample --work-root "$(pwd)" -n 10000 -s 1000 --stat 3 -p
+```
+
+交付部署或联调方案时，应同时说明：
+
+- `conf/wpgen.toml` 的路径
+- `[output].connect` 指向哪个 sink connector
+- `[output].params` 覆盖了哪些允许覆盖的参数
+- 使用的 `wpgen conf check` 和 `wpgen sample` 命令
+- 测试数据最终进入哪个 source
 
 ### 示例
 - 基于样本生成数据，生成10000行，每秒1000行，并3秒打印一次统计信息：
 ```bash
-wpgen sample \
+wpgen sample --work-root "$(pwd)" \
   -n 10000 \
   -s 1000 \
   --stat 3 \
