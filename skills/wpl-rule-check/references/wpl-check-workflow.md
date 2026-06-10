@@ -4,15 +4,48 @@
 
 ---
 
-## 工具安装
+## 运行时前置条件
+
+`wpl-check` 是部署要求的运行时资产，由 `wp-deploy` 负责安装、容器镜像配置、版本选择和卸载生命周期。本 skill 只消费已经准备好的 `wpl-check` 来验证 WPL/OML，不负责部署或清理该工具。
+
+验证前先检查本地二进制是否可用：
 
 ```bash
-# 从官方安装
-curl -sSf https://get.warpparse.ai/inst-x.sh | bash -s -- wpl-check
-
-# 或参考
-# https://github.com/wp-labs/wpl-check
+command -v wpl-check
+wpl-check -V
 ```
+
+如果本地没有 `wpl-check`，不要在 `wpl-rule-check` 里临时设计安装或部署方案；应切换到 `wp-deploy` 补齐运行时资产，再回来执行规则验证。
+
+## 容器化验证资产
+
+本地二进制是首选验证路径；如果部署流程提供了容器化验证环境，则直接消费 `wp-deploy` 配置好的镜像变量：
+
+```bash
+test -n "$WPL_CHECK_IMAGE"
+```
+
+容器化语法检查：
+
+```bash
+docker run --rm \
+  --name wpl-check \
+  -v "$(pwd):/work" \
+  -w /work \
+  "$WPL_CHECK_IMAGE" syntax models/wpl/<package>/parse.wpl
+```
+
+容器化样本验证：
+
+```bash
+docker run --rm \
+  --name wpl-check \
+  -v "$(pwd):/work" \
+  -w /work \
+  "$WPL_CHECK_IMAGE" sample models/wpl/<package>/parse.wpl models/wpl/<package>/sample.dat
+```
+
+卸载或清理 `wpl-check` 验证资产时，切换到 `wp-deploy`，由部署流程统一处理本地二进制、临时容器和镜像保留/删除策略。
 
 ---
 

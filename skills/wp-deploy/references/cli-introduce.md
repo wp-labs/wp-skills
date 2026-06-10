@@ -25,11 +25,78 @@ wpl-check -V
 ```
 如果能正确输出版本号，说明安装成功。
 
-## 卸载
+### wpl-check 容器化验证资产
+
+本地二进制是首选验证路径；如果需要容器化验证，通过环境变量明确镜像和版本：
+
 ```bash
-which wparse wpgen wproj wpl-check | xargs rm -f
+export WPL_CHECK_VERSION="${WPL_CHECK_VERSION:-v0.2.0}"
+export WPL_CHECK_IMAGE="${WPL_CHECK_IMAGE:-ghcr.io/wp-labs/wpl-check:${WPL_CHECK_VERSION}}"
+docker pull "$WPL_CHECK_IMAGE"
 ```
-这条命令会找到 `wparse`、`wpgen`、`wproj` 和 `wpl-check` 的安装路径并删除它们的可执行文件。
+
+容器化语法检查示例：
+
+```bash
+docker run --rm \
+  --name wpl-check \
+  -v "$(pwd):/work" \
+  -w /work \
+  "$WPL_CHECK_IMAGE" syntax models/wpl/<package>/parse.wpl
+```
+
+## 卸载
+
+`wp-monitor` 已经是部署闭环的一部分，因此卸载 `wparse` 相关环境时，先停止部署组件，再删除本地二进制。默认保留数据卷、项目配置和镜像。
+
+卸载前盘点：
+
+```bash
+which wparse wpgen wproj wpl-check || true
+docker ps -a --filter "name=wp-monitor" --filter "name=victoria-metrics" --filter "name=victoria-logs" --filter "name=warp-parse" --filter "name=wpl-check"
+docker images --format '{{.Repository}}:{{.Tag}}' | grep -E 'wpl-check|wp-labs/wpl-check' || true
+docker compose ps 2>/dev/null || true
+```
+
+如果当前工程目录有 `docker-compose.yml`，优先停止 compose 栈：
+
+```bash
+docker compose down
+```
+
+如果没有 compose 文件，或容器是用固定名称启动的，按容器名停止并删除：
+
+```bash
+docker rm -f wp-monitor victoria-metrics victoria-logs warp-parse wpl-check 2>/dev/null || true
+```
+
+删除本地二进制：
+
+```bash
+for bin in wparse wpgen wproj wpl-check; do
+  path="$(command -v "$bin" 2>/dev/null || true)"
+  if [ -n "$path" ]; then
+    rm -f "$path"
+  fi
+done
+```
+
+验证卸载结果：
+
+```bash
+command -v wparse wpgen wproj wpl-check || true
+docker ps -a --filter "name=wp-monitor" --filter "name=victoria-metrics" --filter "name=victoria-logs" --filter "name=warp-parse" --filter "name=wpl-check"
+```
+
+彻底清理数据卷和镜像前必须确认用户明确要求删除数据：
+
+```bash
+docker compose down -v --rmi local
+docker volume rm <metrics_volume> <logs_volume>
+export WPL_CHECK_VERSION="${WPL_CHECK_VERSION:-v0.2.0}"
+export WPL_CHECK_IMAGE="${WPL_CHECK_IMAGE:-ghcr.io/wp-labs/wpl-check:${WPL_CHECK_VERSION}}"
+docker image rm ghcr.io/wp-labs/wp-monitor:latest victoriametrics/victoria-metrics:v1.133.0 victoriametrics/victoria-logs:v1.43.0 "$WPL_CHECK_IMAGE"
+```
 
 ## wparse CLI介绍
 
@@ -42,18 +109,18 @@ wparse --help
 启动常驻实例：
 
 ```bash
-wparse daemon --work-root .
+wparse daemon --work-root "$(pwd)"
 ```
 
 执行批处理：
 
 ```bash
-wparse batch --work-root .
+wparse batch --work-root "$(pwd)"
 ```
 
 ### 常用参数
 
-- `--work-root`：工程根目录
+- `--work-root`：工程根目录；当前版本建议传绝对路径，例如 `"$(pwd)"`
 - `-n, --max-line`：限制本次最多处理的行数
 - `-w, --parse-workers`：指定解析 worker 数
 - `--stat`：设置统计输出周期
@@ -83,13 +150,23 @@ wpgen <COMMAND> [OPTIONS]
 - --stat：设置统计周期
 
 #### conf子命令参数
+- init  : Initialize generator config/初始化 `conf/wpgen.toml`
 - clean : Clean generator config/清理生成器配置
 - check : Check generator config/检查生成器配置
+
+#### 标准验证命令
+
+```bash
+wpgen conf check --work-root "$(pwd)"
+wpgen sample --work-root "$(pwd)" -n 10000 -s 1000 --stat 3 -p
+```
+
+生成部署或联调工作流时，测试数据发送必须走 `wpgen`。不要生成 Python / Node / Bash sender、`nc` 循环、`curl` 循环等临时脚本来替代 `wpgen`。
 
 #### 示例
 - 基于样本生成数据，生成10000行，每秒1000行，并3秒打印一次统计信息：
 ```bash
-wpgen sample \
+wpgen sample --work-root "$(pwd)" \
   -n 10000 \
   -s 1000 \
   --stat 3 \
@@ -104,6 +181,39 @@ wpgen sample \
 ```bash
 wproj --help
 ```
+
+### 初始化和生成工程配置
+
+新建或生成 WarpParse 工程配置时，先使用 `wproj` 建立配置基线，不要手工拼装 `conf/`、`connectors/`、`topology/`、`models/knowledge/` 等核心目录。
+
+本地初始化：
+
+```bash
+wproj init --work-root .
+```
+
+指定初始化模式：
+
+```bash
+wproj init --work-root . --mode full
+wproj init --work-root . --mode normal
+wproj init --work-root . --mode model
+wproj init --work-root . --mode conf
+wproj init --work-root . --mode data
+```
+
+从远端项目源初始化，并固定目标版本：
+
+```bash
+wproj init --work-root . --repo <repo-url> --version <version>
+```
+
+初始化后立即检查：
+
+```bash
+wproj check --work-root . --what all --fail-fast
+```
+交付部署配置时，应记录实际执行过的 `wproj init`  命令，方便后续用同一命令再生成或升级配置。
 
 ### 批量检查工程
 检查整个项目：

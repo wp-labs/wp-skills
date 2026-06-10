@@ -99,6 +99,93 @@ Optional tools that enhance the skill's capabilities:
 | `wpgen` | 数据生成工具 | Included with WarpParse |
 | `wpl-check` | WPL 离线验证 | [GitHub](https://github.com/wp-labs/wpl-check) |
 
+`wpl-check` can be used as a local binary or through a configured container image:
+
+```bash
+curl -sSf https://get.warpparse.ai/inst-x.sh | bash -s -- wpl-check
+export WPL_CHECK_VERSION="${WPL_CHECK_VERSION:-v0.2.0}"
+export WPL_CHECK_IMAGE="${WPL_CHECK_IMAGE:-ghcr.io/wp-labs/wpl-check:${WPL_CHECK_VERSION}}"
+```
+
+## Configuration Generation
+
+Generated WarpParse project configuration should use `wproj` as the standard path. Do not hand-assemble equivalent `conf/`, `connectors/`, `topology/`, or `models/knowledge/` files for a new generated project.
+
+Initialize a local project:
+
+```bash
+wproj init --work-root .
+wproj check --work-root . --what all --fail-fast
+```
+
+For a file-to-file example, generate a fresh project in the user's project directory or a temporary demo directory. Do not run or copy the packaged `skills/wp-deploy/examples/file_to_file` directory as the project root:
+
+```bash
+mkdir -p wparse-file-to-file-demo
+cd wparse-file-to-file-demo
+wproj init --work-root "$(pwd)" --mode full
+wproj check --work-root "$(pwd)" --what all --fail-fast
+```
+
+Initialize from a remote project source:
+
+```bash
+wproj init --work-root . --repo <repo-url> --version <version>
+wproj check --work-root . --what all --fail-fast
+```
+
+Update or regenerate remote-backed configuration:
+
+```bash
+wproj conf update --work-root . --group models --version <version>
+wproj conf update --work-root . --group infra --version <version>
+wproj check --work-root . --what all --fail-fast
+```
+
+Skill-generated deployment documentation should include the exact `wproj` command used so the same configuration can be regenerated and validated consistently.
+
+## Validation Workflow
+
+Generated workflows should use `wpgen` for sample replay and test data injection. Do not generate ad hoc sender scripts for this step.
+
+```bash
+wpl-check syntax models/wpl/<package>/parse.wpl
+wpl-check sample models/wpl/<package>/parse.wpl models/wpl/<package>/sample.dat
+wpgen conf check --work-root "$(pwd)"
+wpgen sample --work-root "$(pwd)" -n 10000 -s 1000 --stat 3 -p
+```
+
+Generated deployment workflows should actively deploy `wp-monitor` by default. Do not stop at "wp-monitor can be started later" unless Docker, ports, or image pulls are actually blocked and the failure evidence is included.
+
+A standard observable deployment includes:
+
+- `warp-parse`
+- `victoria-metrics`
+- `victoria-logs`
+- `wp-monitor`
+
+Minimum monitor-side checks:
+
+```bash
+docker compose version
+docker info
+docker compose up -d victoria-metrics victoria-logs wp-monitor
+docker compose ps
+docker compose logs wp-monitor
+curl -fsS http://localhost:8428/health
+curl -fsS http://localhost:9428/health
+curl -fsS http://localhost:18080
+```
+
+Then open `http://localhost:18080` and inspect source input, parse success/error counts, misses, sink output, and pipeline health.
+
+Final generated output must include a `wp-monitor` closure status:
+
+- Deployment status: deployed or not deployed
+- Access URL, usually `http://localhost:18080`
+- Whether source, parse, miss, and sink data are visible
+- If not deployed or not verified, state that the business pipeline is complete but the monitoring closure is incomplete
+
 ## Contributing
 
 To add a new skill:

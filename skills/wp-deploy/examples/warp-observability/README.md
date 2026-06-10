@@ -101,7 +101,6 @@ tags = ["src:tcp"]
 
 ```toml
 [generator]
-mode = "sample"
 count = 3
 speed = 1000
 parallel = 2
@@ -109,12 +108,14 @@ parallel = 2
 [output]
 name = "gen_out"
 connect = "tcp_sink"
-params = { port = 19002 }
+
+[output.params]
+port = 19002
 ```
 
 说明：
 
-- `wpgen` 用 sample 模式生成数据
+- `wpgen sample` 基于样本生成数据
 - 输出不是写文件，而是走 `tcp_sink`
 - 数据直接发到 `warp-parse` 的 `19002` 端口
 
@@ -201,8 +202,42 @@ log_level = "info"
 在当前目录执行：
 
 ```bash
+docker compose version
+docker info
 docker compose up -d
+docker compose ps
 docker compose logs wp-monitor
+```
+
+## 怎么发送测试数据
+
+测试数据统一通过 `wpgen` 发送，不要临时编写 sender 脚本或用 `nc` / `curl` 循环替代。
+
+先检查 `wpgen` 配置：
+
+```bash
+cd wparse
+wpgen conf check --work-root "$(pwd)"
+```
+
+再用 sample 模式向 `tcp_sink` 发送数据：
+
+```bash
+wpgen sample --work-root "$(pwd)" -n 10000 -s 1000 --stat 3 -p
+```
+
+本示例的 `conf/wpgen.toml` 会把数据发送到 `tcp_sink`，再进入 `warp-parse` 的 `tcp source`。
+
+## 怎么验证观测链路
+
+基础服务检查：
+
+```bash
+docker compose ps
+docker compose logs wp-monitor
+curl -fsS http://localhost:8428/health
+curl -fsS http://localhost:9428/health
+curl -fsS http://localhost:18080
 ```
 
 启动后可访问：
@@ -210,6 +245,27 @@ docker compose logs wp-monitor
 - `http://localhost:18080`：`wp-monitor`
 - `http://localhost:8428`：`victoria-metrics`
 - `http://localhost:9428`：`victoria-logs`
+
+在 `wp-monitor` 页面至少检查：
+
+- source 输入量是否增长
+- parse 成功数和错误数是否符合预期
+- miss 是否为空或在可接受范围
+- sink 输出量是否增长
+- pipeline health 是否正常
+
+最终交付或汇报时必须包含：
+
+```text
+wp-monitor 闭环状态：
+- 部署状态：已部署
+- 访问地址：http://localhost:18080
+- 数据状态：已看到 source 输入量、parse 计数、sink 输出量
+- Miss 状态：0 或具体数量
+- 结论：完整闭环已完成
+```
+
+如果没有打开或验证 `wp-monitor`，不能写“完整闭环已完成”，只能写“业务链路已完成，监控闭环未完成”，并列出缺少的验证步骤。
 
 ## 怎么理解这个示例
 
