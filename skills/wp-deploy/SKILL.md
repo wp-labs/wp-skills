@@ -67,6 +67,9 @@ WarpParse 是一个高性能的 ELT 引擎，专注于日志数据的解析、�
 - 检查 `allow_override`、目录结构、端口、依赖和接线关系是否一致
 - 输出本次使用的 `wproj` 命令，说明如何用同一命令再生成或更新配置
 - 当用户要求“给一个示例”时，在用户指定目录或临时演示目录中通过 `wproj` 创建可运行工程；仓库内 `examples/` 只作为只读参考，不作为运行目录交付
+- 输出测试数据发送或回放方式时，必须使用 `wpgen` 配置和命令；不要生成自定义 Python / Node / Bash sender、`nc` 循环、`curl` 循环等替代方案
+- 输出部署或联调方案时，必须默认部署 `wp-monitor` 观测栈，并给出 monitor 侧的健康、解析、miss、source/sink 检查项
+- 最终总结必须包含“wp-monitor 闭环状态”：明确 `wp-monitor` 是已部署并看到数据，还是未部署导致观测闭环未完成；不能只输出业务文件落点后就结束
 
 ### 本 skill 不处理
 
@@ -76,6 +79,9 @@ WarpParse 是一个高性能的 ELT 引擎，专注于日志数据的解析、�
 - 纯业务字段语义判断
 - 在新工程中手工拼装 `conf/`、`connectors/`、`topology/`、`models/knowledge/` 等核心配置目录来替代 `wproj`
 - 把已安装 skill 目录下的 `examples/` 当成用户项目目录运行，或要求用户直接修改 skill 自带示例文件
+- 编写临时 sender 脚本来绕过 `wpgen` 发送测试数据
+- 只给出能启动 `wparse` 的部署方案，却不部署 `wp-monitor` 观测栈
+- 在没有部署或验证 `wp-monitor` 的情况下声称完整部署链路已经完成
 
 ### 强制路由
 
@@ -274,7 +280,7 @@ file = "example.json"
 
 ### 5. 接入 wpgen
 
-当用户需要进行链路验证或者压测时，请使用`wpgen`。
+当用户需要进行链路验证、样本回放、测试数据发送或者压测时，必须使用 `wpgen`。
 
 使用要点：
 
@@ -282,12 +288,25 @@ file = "example.json"
 - `[output].connect` 引用 `connectors/sink.d` 中的 sink connector id
 - `[output].params` 只能覆盖 `allow_override` 允许的键
 - 常见链路是 `wpgen -> tcp_sink -> warp-parse tcp source`
+- `wproj init --mode full` 会生成 `conf/wpgen.toml`；若缺失，使用 `wpgen conf init --work-root "$(pwd)"` 生成
+- 修改或生成后先检查配置：`wpgen conf check --work-root "$(pwd)"`
+- 样本回放命令必须写成明确命令，例如：
+
+```bash
+wpgen sample --work-root "$(pwd)" -n 10000 -s 1000 --stat 3 -p
+```
+
+禁止项：
+
+- 不要让 agent 生成 Python / Node / Bash sender 脚本
+- 不要用 `nc`、`curl`、`while read` 循环等临时发送方式替代 `wpgen`
+- 如果确实无法使用 `wpgen`，必须明确说明阻塞原因和缺少的配置或工具，不要自动降级成自定义脚本
 
 如果任务涉及 `wpgen`，优先参考：`references/wpgen.md`
 
 ### 6. 接入 wp-monitor
 
-当用户需要判断链路是否真的工作正常，而不是只看配置语法时，优先考虑 `wp-monitor`：
+当用户需要部署、联调或判断链路是否真的工作正常，而不是只看配置语法时，必须默认部署 `wp-monitor`：
 
 - 观察 source 输入量、解析成功率、MISS、错误和 sink 输出量
 - 排查 monitor / miss / downstream 是否异常
@@ -297,8 +316,84 @@ file = "example.json"
 
 - `wp-monitor` 依赖 `victoria-metrics` 存指标
 - 如果要查看 miss 或业务日志，通常还需要 `victoria-logs`
-- `wparse` 侧通常需要在 `infra.d/monitor.toml` 中接 `victoriametrics_sink`
+- `wparse` 侧必须在 `infra.d/monitor.toml` 中接 `victoriametrics_sink`，不能停留在 `file_proto_sink -> monitor.dat` 的本地文件模式
 - `wp-monitor/config/app.toml` 至少要提供 `vm_base_url` 和 `vlog_base_url`
+- docker compose 部署至少要包含或主动启动这些服务：`victoria-metrics`、`victoria-logs`、`wp-monitor`；如果 `wparse` 也容器化，则同一个 compose 中还应包含 `warp-parse`
+- 如果当前环境不能启动 `wp-monitor`，必须先实际检查 Docker 或端口等阻塞条件，并说明失败证据；不能因为当前是本地文件示例就默认跳过部署
+
+默认部署动作：
+
+1. 检查 Docker 是否可用：
+
+```bash
+docker compose version
+docker info
+```
+
+2. 在工程目录生成或补齐 `docker-compose.yml` 和 `wp-monitor/config/app.toml`，启动观测栈：
+
+```bash
+mkdir -p wp-monitor/config
+docker compose up -d victoria-metrics victoria-logs wp-monitor
+```
+
+3. 将 `topology/sinks/infra.d/monitor.toml` 从本地文件模式改为 `victoriametrics_sink`。本地运行 `wparse` 时 endpoint 使用宿主机地址：
+
+```toml
+version = "2.0"
+
+[sink_group]
+name = "monitor"
+batch_size = 1
+batch_timeout_ms = 300
+
+[[sink_group.sinks]]
+name = "victoriametrics"
+connect = "victoriametrics_sink"
+
+[sink_group.sinks.params]
+endpoint = "http://127.0.0.1:8428"
+api_path = "/api/v1/import/prometheus"
+```
+
+如果 `wparse` 也在 compose 网络内运行，endpoint 使用服务名：
+
+```toml
+endpoint = "http://victoria-metrics:8428"
+```
+
+4. 如果需要 miss 查询，确保 `miss` sink 写入 `victorialogs_sink`，本地运行时 endpoint 使用 `http://127.0.0.1:9428`，容器网络内使用 `http://victoria-logs:9428`。
+
+标准 monitor 验证项：
+
+```bash
+docker compose ps
+docker compose logs wp-monitor
+curl -fsS http://localhost:8428/health
+curl -fsS http://localhost:9428/health
+curl -fsS http://localhost:18080
+```
+
+启动后在 `http://localhost:18080` 检查：
+
+- source 输入量是否增长
+- parse 成功数和错误数是否符合预期
+- miss 是否为空或在可接受范围
+- sink 输出量是否增长
+- pipeline health 是否正常
+
+最终输出必须包含下面这类结论段，不能省略：
+
+```text
+wp-monitor 闭环状态：
+- 部署状态：已部署 / 未部署
+- 访问地址：http://localhost:18080（如已部署）
+- 数据状态：已看到 source 输入量、parse 计数、sink 输出量 / 尚未验证
+- Miss 状态：0 或具体数量 / 尚未验证
+- 如果未部署：必须写明实际阻塞原因，例如 Docker 不可用、端口冲突、镜像拉取失败；否则应继续部署
+```
+
+如果 `wp-monitor` 未部署或未验证，最终总结不能写“完整闭环已完成”。应写“业务链路已完成，监控闭环未完成”，并给出失败证据和补齐命令。没有实际阻塞证据时，不要停在未部署状态，继续完成部署。
 
 如果任务涉及观测或监控联调，优先参考：`references/wp-monitor.md`
 
@@ -313,8 +408,9 @@ file = "example.json"
 需要明确说明：
 
 - `warp-parse` 如何挂载 `wparse/` 目录
-- `wpgen` 往哪个 sink connector 发流量
+- `wpgen` 使用哪个 `conf/wpgen.toml`，往哪个 sink connector 发流量，以及确切运行命令
 - `wp-monitor` 读哪个 `victoria-metrics` / `victoria-logs` 地址
+- `wp-monitor` 页面或日志中要检查哪些指标、miss、source/sink 状态
 - 哪些组件是必需，哪些只是联调增强件
 
 ## 常见类型选择
@@ -355,6 +451,8 @@ file = "example.json"
 - 如何用同一条 `wproj` 命令再生成或更新配置
 - `wproj check --work-root . --what all --fail-fast` 是否通过
 - source、sink、`wpgen`、`wp-monitor` 是怎么接起来的
+- 测试数据是否通过 `wpgen` 发送或回放；如果没有，缺少什么条件
+- `wp-monitor` 是否已接入并看到数据；如果没有，必须明确写“观测闭环未完成”，并列出缺少什么依赖或启动条件
 - 哪些参数来自默认定义，哪些参数在实例侧覆盖
 - 业务数据、监控数据、miss 数据分别落到哪里
 - 如果未验证，缺少哪一步环境条件
@@ -365,9 +463,12 @@ file = "example.json"
 
 1. 变更后的配置文件路径
 2. 使用过或需要执行的 `wproj` 生成、更新、验证命令
-3. 每个文件的作用
-4. 为什么这样接线和部署
-5. 启动顺序、依赖关系和验证方式
+3. 使用过或需要执行的 `wpgen` 配置检查和样本回放命令
+4. `wp-monitor` 启动方式和 monitor 验证项
+5. `wp-monitor 闭环状态`：部署状态、访问地址、数据状态、miss 状态、未完成原因
+6. 每个文件的作用
+7. 为什么这样接线和部署
+8. 启动顺序、依赖关系和验证方式
 
 
 ## 示例与参考
@@ -398,5 +499,6 @@ file = "example.json"
 
 ## 其他要求
 - 当卸载wparse时，需要卸载wparse的整套组件（二进制）。
-- 如果需要发送数据来验证测试结果，需要给出wpgen命令。
+- 如果需要发送数据来验证测试结果，必须给出 `wpgen` 命令，不要生成自定义 sender 脚本。
+- 如果给出部署或联调方案，必须包含 `wp-monitor` 配置或启动说明，以及 monitor 侧验证项。
 - 当提供配置时，无论是否使用知识库，都要提供一个默认知识库配置。

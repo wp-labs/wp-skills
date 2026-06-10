@@ -16,6 +16,9 @@ prompts:
     5. 输出 docker compose 或最小部署步骤
     6. 核对业务数据、监控指标、miss 数据的落点
     7. 输出本次使用的 wproj 生成、更新和验证命令
+    8. 输出 wpgen 配置检查和样本回放命令
+    9. 输出 wp-monitor 启动方式和 monitor 验证项
+    10. 最终总结必须输出 wp-monitor 闭环状态
 
     ## 强制路由
 
@@ -31,11 +34,22 @@ prompts:
 
     ## 工作原则
 
-    - 生成项目、搭一套工程、创建部署配置、补完整链路时，必须先使用 wproj init 
+    - 生成项目、搭一套工程、创建部署配置、补完整链路时，必须先使用 wproj init 或 wproj conf update
     - 不得手工拼装 conf/、connectors/、topology/、models/knowledge/ 等核心配置目录来替代 wproj
     - 如果本地没有 wproj，先给出安装命令并停止生成配置，不用手写文件绕过
     - 对已有工程只能在 wproj 生成基线上做必要的局部调整
     - 交付时必须包含确切的 wproj 命令，例如 wproj init --work-root .、wproj conf update --work-root . --group models --version <version>、wproj check --work-root . --what all --fail-fast
+    - 发送测试数据、样本回放、联调灌流量、压测时，必须使用 wpgen；不得生成 Python / Node / Bash sender、nc 循环、curl 循环或 while read 临时脚本来替代 wpgen
+    - 交付时必须包含确切的 wpgen 命令，例如 wpgen conf check --work-root "$(pwd)"、wpgen sample --work-root "$(pwd)" -n 10000 -s 1000 --stat 3 -p
+    - 部署或联调方案必须默认主动部署 wp-monitor 观测栈；不能只给“后续可启动”的说明
+    - 默认要生成或补齐 docker-compose.yml 和 wp-monitor/config/app.toml，并执行或要求执行 docker compose up -d victoria-metrics victoria-logs wp-monitor
+    - wproj init 默认的 monitor sink 可能是 file_proto_sink -> monitor.dat；部署示例时必须改为或追加 victoriametrics_sink，不能停留在本地文件模式
+    - 本地运行 wparse 时 victoriametrics_sink endpoint 用 http://127.0.0.1:8428；wparse 在 compose 网络内运行时用 http://victoria-metrics:8428
+    - 如果不能部署 wp-monitor，必须先实际检查 docker compose version、docker info、端口和镜像拉取等阻塞条件，并在最终回答写出失败证据；没有阻塞证据时继续部署
+    - monitor 验证必须覆盖 source 输入量、parse 成功/错误、miss、sink 输出量和 pipeline health，不能只说“服务已启动”
+    - 最终回答必须包含“wp-monitor 闭环状态”段：部署状态、访问地址、是否看到 source/parse/sink 数据、miss 状态、未完成原因
+    - 如果 wp-monitor 未部署或未验证，最终回答必须写“业务链路已完成，监控闭环未完成”，不能写“完整闭环已完成”；但除非有明确阻塞证据，不允许停在未部署状态
+    - docker compose 观测链路应包含或说明 warp-parse、victoria-metrics、victoria-logs、wp-monitor 的关系
     - 先看现有目录和 references，再决定改哪一层配置；examples 只能作为只读参考，不能作为用户项目运行目录
     - 不得 cd 到 ~/.claude/skills、~/.codex/skills 或本仓库 skills/wp-deploy/examples 下运行示例，也不得要求用户修改 skill 自带示例文件
     - 能复用已有 connector 定义时，不新造命名
@@ -63,6 +77,10 @@ triggers:
     - "帮我配.*sink"
     - "怎么接.*wpgen"
     - "怎么接.*wp-monitor"
+    - "发送.*测试数据"
+    - "回放.*样本"
+    - "压测"
+    - "观测.*验证"
     - "怎么把.*链路跑起来"
     - "生成.*配置"
     - "搭.*工程"
