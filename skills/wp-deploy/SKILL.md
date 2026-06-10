@@ -69,6 +69,7 @@ WarpParse 是一个高性能的 ELT 引擎，专注于日志数据的解析、�
 - 检查 `allow_override`、目录结构、端口、依赖和接线关系是否一致
 - 输出本次使用的 `wproj` 命令，说明如何用同一命令再生成或更新配置
 - 当用户要求“给一个示例”时，在用户指定目录或临时演示目录中通过 `wproj` 创建可运行工程；仓库内 `examples/` 只作为只读参考，不作为运行目录交付
+- 当用户要求“文件到文件示例”“file to file”“安装 wparse 后给一个文件到文件的例子”时，必须在用户当前目录或新建演示目录执行 `wproj init --work-root "$(pwd)" --mode full` 建立工程；不得读取、复制、运行或交付 skill 自带的 `examples/file_to_file/`
 - 输出测试数据发送或回放方式时，必须使用 `wpgen` 配置和命令；不要生成自定义 Python / Node / Bash sender、`nc` 循环、`curl` 循环等替代方案
 - 输出部署或联调方案时，必须默认部署 `wp-monitor` 观测栈，并给出 monitor 侧的健康、解析、miss、source/sink 检查项
 - 最终总结必须包含“wp-monitor 闭环状态”：明确 `wp-monitor` 是已部署并看到数据，还是未部署导致观测闭环未完成；不能只输出业务文件落点后就结束
@@ -83,6 +84,7 @@ WarpParse 是一个高性能的 ELT 引擎，专注于日志数据的解析、�
 - 纯业务字段语义判断
 - 在新工程中手工拼装 `conf/`、`connectors/`、`topology/`、`models/knowledge/` 等核心配置目录来替代 `wproj`
 - 把已安装 skill 目录下的 `examples/` 当成用户项目目录运行，或要求用户直接修改 skill 自带示例文件
+- 在文件到文件示例中使用 `~/.claude/skills/wp-deploy/examples/file_to_file`、`~/.codex/skills/wp-deploy/examples/file_to_file` 或本仓库 `skills/wp-deploy/examples/file_to_file` 作为 `--work-root`
 - 编写临时 sender 脚本来绕过 `wpgen` 发送测试数据
 - 只给出能启动 `wparse` 的部署方案，却不部署 `wp-monitor` 观测栈
 - 在没有部署或验证 `wp-monitor` 的情况下声称完整部署链路已经完成
@@ -163,6 +165,21 @@ wproj --version
 ```
 
 交付时必须写明本次使用或要求用户执行的 `wproj` 命令。后续 source、sink、wpgen、monitor 的配置只能作为 `wproj` 生成基线上的局部调整，并且最后重新执行 `wproj check`。
+
+#### 文件到文件示例的固定入口
+
+当用户说“安装 wparse，给一个文件到文件的示例”“file to file 示例”“从文件读再写到文件”时，不要去读取或运行 `examples/file_to_file/`。正确做法是在用户项目目录或临时演示目录里新建工程：
+
+```bash
+mkdir -p wparse-file-to-file-demo
+cd wparse-file-to-file-demo
+wproj init --work-root "$(pwd)" --mode full
+wproj check --work-root "$(pwd)" --what all --fail-fast
+```
+
+然后只在这个 `--work-root` 下做必要局部调整，例如确认 file source、file sink、`conf/wpgen.toml`、`topology/sinks/infra.d/monitor.toml` 和观测栈接线。`examples/file_to_file/` 只能用来解释字段含义或对照目录结构，不能作为运行目录、复制来源或最终交付路径。
+
+禁止输出任何把 `~/.claude/skills/.../examples`、`~/.codex/skills/.../examples` 或本仓库 `skills/wp-deploy/examples` 放进 `cd`、`--work-root`、`docker -v`、启动命令或最终交付路径的命令。
 
 ### 1. 判定修改层级
 
@@ -581,7 +598,7 @@ docker image rm ghcr.io/wp-labs/wp-monitor:latest victoriametrics/victoria-metri
 8. 启动顺序、依赖关系和验证方式
 
 
-## 示例与参考
+## 参考材料
 
 优先参考本地材料：
 
@@ -591,21 +608,12 @@ docker image rm ghcr.io/wp-labs/wp-monitor:latest victoriametrics/victoria-metri
 - `references/wpgen.md`：`wpgen` 配置、输出接线和压测速度模型
 - `references/wp-monitor.md`：`wp-monitor` 配置、监控 sink 接入和观测依赖
 - `references/warp-console-observability.md`：从 `warp-console` 提炼出的日志解析 + 观测 + 部署主线
-- `examples/file_to_file/`：最小 file source -> file sink -> `wparse` 只读参考示例
-- `examples/warp-observability/`：带 `wpgen`、`wp-monitor` 和观测依赖的只读参考示例
 
-示例目录中的关键文件：
+内置 `examples/` 不是默认参考入口。只有当用户明确要求“检查 skill 自带示例”“解释内置 examples 里的某个文件”时，才可以读取它们。正常的文件到文件、部署、联调、生成配置任务都必须先通过 `wproj init` / `wproj conf update` 在用户项目目录或临时演示目录生成。
 
-- `examples/file_to_file/conf/wparse.toml`
-- `examples/file_to_file/connectors/source.d/file-default.toml`
-- `examples/file_to_file/connectors/sink.d/file-json.toml`
-- `examples/file_to_file/topology/sources/wpsrc.toml`
-- `examples/file_to_file/topology/sinks/business.d/example.toml`
-- `examples/warp-observability/docker-compose.yml`
-- `examples/warp-observability/wparse/conf/wparse.toml`
-- `examples/warp-observability/wparse/conf/wpgen.toml`
-- `examples/warp-observability/wparse/topology/sinks/infra.d/monitor.toml`
-- `examples/warp-observability/wp-monitor/config/app.toml`
+内置示例即使被读取，也只用于解释结构和参数，不得出现在用户可执行命令的 `cd`、`--work-root`、`-v` 挂载或最终交付路径中。尤其是文件到文件场景，必须通过 `wproj init --work-root "$(pwd)" --mode full` 在用户项目目录或临时演示目录生成。
+
+不要为了回答“安装 wparse，给一个文件到文件示例”去读取 `examples/file_to_file/`；这类请求的第一步是安装工具并运行 `wproj init --work-root "$(pwd)" --mode full`。
 
 ## 其他要求
 - 当卸载wparse时，需要卸载wparse的整套组件：二进制 + `wpl-check` 验证物料 + `wp-monitor` 观测栈容器；数据卷和镜像默认保留，除非用户明确要求彻底清理。

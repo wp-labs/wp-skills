@@ -118,6 +118,15 @@ wproj init --work-root .
 wproj check --work-root . --what all --fail-fast
 ```
 
+For a file-to-file example, generate a fresh project in the user's project directory or a temporary demo directory. Do not run or copy the packaged `skills/wp-deploy/examples/file_to_file` directory as the project root:
+
+```bash
+mkdir -p wparse-file-to-file-demo
+cd wparse-file-to-file-demo
+wproj init --work-root "$(pwd)" --mode full
+wproj check --work-root "$(pwd)" --what all --fail-fast
+```
+
 Initialize from a remote project source:
 
 ```bash

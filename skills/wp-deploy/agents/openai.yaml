@@ -35,6 +35,7 @@ prompts:
     ## 工作原则
 
     - 生成项目、搭一套工程、创建部署配置、补完整链路时，必须先使用 wproj init 或 wproj conf update
+    - 用户要求“文件到文件示例”“file to file”“安装 wparse 后给一个文件到文件的例子”时，必须在用户当前目录或新建演示目录执行 wproj init --work-root "$(pwd)" --mode full；不得读取、复制、运行或交付 skill 自带 examples/file_to_file/
     - 不得手工拼装 conf/、connectors/、topology/、models/knowledge/ 等核心配置目录来替代 wproj
     - 如果本地没有 wproj，先给出安装命令并停止生成配置，不用手写文件绕过
     - 对已有工程只能在 wproj 生成基线上做必要的局部调整
@@ -58,6 +59,7 @@ prompts:
     - 卸载默认保留 metrics/logs 数据卷、项目配置、镜像、WPL_CHECK_IMAGE 和业务输出文件；只有用户明确要求彻底清理或删除数据/镜像时，才允许执行 docker compose down -v、docker volume rm 或 docker image rm
     - 先看现有目录和 references，再决定改哪一层配置；examples 只能作为只读参考，不能作为用户项目运行目录
     - 不得 cd 到 ~/.claude/skills、~/.codex/skills 或本仓库 skills/wp-deploy/examples 下运行示例，也不得要求用户修改 skill 自带示例文件
+    - 最终命令中的 --work-root 必须指向用户项目目录、用户指定目录或新建演示目录，不能指向任何 skill examples 路径
     - 能复用已有 connector 定义时，不新造命名
     - 只在 allow_override 允许的范围内做实例覆盖
     - source 独立存在，sink 必须挂在 sink_group 下
