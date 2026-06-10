@@ -100,6 +100,88 @@ docker compose logs wp-monitor
 
 启动后可通过 `http://localhost:18080` 访问 `wp-monitor` 页面。
 
+## 部署验证清单
+
+生成的部署或联调方案应默认主动部署 `wp-monitor`。不要只写“后续可以启动 wp-monitor”。如果当前环境不能启动 `wp-monitor`，需要先实际检查 Docker、端口、镜像拉取等阻塞条件，并明确写出失败证据；没有阻塞证据时，应继续完成部署。
+
+默认部署动作：
+
+```bash
+docker compose version
+docker info
+mkdir -p wp-monitor/config
+docker compose up -d victoria-metrics victoria-logs wp-monitor
+```
+
+`wproj init --mode full` 默认生成的 `topology/sinks/infra.d/monitor.toml` 可能是 `file_proto_sink -> monitor.dat`。这只是本地文件模式，不等于 `wp-monitor` 已部署。部署闭环时必须把 monitor sink 接到 `victoriametrics_sink`：
+
+```toml
+version = "2.0"
+
+[sink_group]
+name = "monitor"
+batch_size = 1
+batch_timeout_ms = 300
+
+[[sink_group.sinks]]
+name = "victoriametrics"
+connect = "victoriametrics_sink"
+
+[sink_group.sinks.params]
+endpoint = "http://127.0.0.1:8428"
+api_path = "/api/v1/import/prometheus"
+```
+
+本地运行 `wparse` 时用 `http://127.0.0.1:8428`；如果 `wparse` 也在 compose 网络内运行，使用 `http://victoria-metrics:8428`。
+
+基础服务检查：
+
+```bash
+docker compose ps
+docker compose logs wp-monitor
+curl -fsS http://localhost:8428/health
+curl -fsS http://localhost:9428/health
+curl -fsS http://localhost:18080
+```
+
+打开 `http://localhost:18080` 后，至少检查：
+
+- source 输入量是否增长
+- parse 成功数和错误数是否符合预期
+- miss 是否为空或在可接受范围
+- sink 输出量是否增长
+- pipeline health 是否正常
+
+## 最终输出要求
+
+`wp-monitor` 是部署闭环的最后一步。生成部署、联调或示例工程的最终回答，必须包含 `wp-monitor 闭环状态`，不能只输出业务文件或下游 sink 的落点。
+
+推荐格式：
+
+```text
+wp-monitor 闭环状态：
+- 部署状态：已部署 / 未部署
+- 访问地址：http://localhost:18080（已部署时填写）
+- 数据状态：已看到 source 输入量、parse 计数、sink 输出量 / 尚未验证
+- Miss 状态：0 或具体数量 / 尚未验证
+- 结论：完整闭环已完成 / 业务链路已完成，监控闭环未完成
+```
+
+如果没有部署 `wp-monitor`，最终结论必须写：
+
+```text
+业务链路已完成，监控闭环未完成。
+```
+
+并给出实际阻塞证据和补齐命令。只有在 Docker 不可用、端口冲突、镜像拉取失败等明确阻塞存在时，才允许停在未部署状态。否则应继续启动 `victoria-metrics`、`victoria-logs`、`wp-monitor`，并确认 `infra.d/monitor.toml` 已写入 `victoriametrics_sink`。
+
+如果 `wp-monitor` 没有数据，按顺序检查：
+
+1. `wparse/topology/sinks/infra.d/monitor.toml` 是否接入 `victoriametrics_sink`
+2. `victoria-metrics` 是否健康
+3. `wp-monitor/config/app.toml` 的 `vm_base_url` 是否指向正确地址
+4. miss 查询是否需要 `victoria-logs` 或 `miss_file_path`
+
 ## wparse接入指标到victoriametrics
 
 - 提供一个victoriametrics连接器`wparse/connectors/sink.d/victoriametrics.toml`,内容如下：
@@ -147,4 +229,3 @@ endpoint = "http://wp-monitor-victoria-logs:9428"
 api_path = "/insert/jsonline?_msg_field=content,log"
 tags = ["wp_stage:miss"]
 ```
-

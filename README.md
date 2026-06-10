@@ -127,6 +127,46 @@ wproj check --work-root . --what all --fail-fast
 
 Skill-generated deployment documentation should include the exact `wproj` command used so the same configuration can be regenerated and validated consistently.
 
+## Validation Workflow
+
+Generated workflows should use `wpgen` for sample replay and test data injection. Do not generate ad hoc sender scripts for this step.
+
+```bash
+wpgen conf check --work-root "$(pwd)"
+wpgen sample --work-root "$(pwd)" -n 10000 -s 1000 --stat 3 -p
+```
+
+Generated deployment workflows should actively deploy `wp-monitor` by default. Do not stop at "wp-monitor can be started later" unless Docker, ports, or image pulls are actually blocked and the failure evidence is included.
+
+A standard observable deployment includes:
+
+- `warp-parse`
+- `victoria-metrics`
+- `victoria-logs`
+- `wp-monitor`
+
+Minimum monitor-side checks:
+
+```bash
+docker compose version
+docker info
+docker compose up -d victoria-metrics victoria-logs wp-monitor
+docker compose ps
+docker compose logs wp-monitor
+curl -fsS http://localhost:8428/health
+curl -fsS http://localhost:9428/health
+curl -fsS http://localhost:18080
+```
+
+Then open `http://localhost:18080` and inspect source input, parse success/error counts, misses, sink output, and pipeline health.
+
+Final generated output must include a `wp-monitor` closure status:
+
+- Deployment status: deployed or not deployed
+- Access URL, usually `http://localhost:18080`
+- Whether source, parse, miss, and sink data are visible
+- If not deployed or not verified, state that the business pipeline is complete but the monitoring closure is incomplete
+
 ## Contributing
 
 To add a new skill:
