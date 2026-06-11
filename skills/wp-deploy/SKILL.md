@@ -20,6 +20,8 @@ dependencies:
     - wproj
     - wpgen
     - wpl-check
+    - wprescue
+    - wp-inst
     - wp-monitor
   docs:
     - docs.warpparse.ai
@@ -461,7 +463,7 @@ wp-monitor 闭环状态：
 
 当用户要求“卸载 wparse”“清理 wparse 环境”“删除 WarpParse 部署”时，不能只删除二进制。因为 `wp-monitor` 已经是部署闭环的一部分，卸载必须覆盖：
 
-1. 本地命令行工具：`wparse`、`wpgen`、`wproj`、`wpl-check`
+1. 本地命令行工具：`wparse`、`wpgen`、`wproj`、`wpl-check`、`wprescue`、`wp-inst`
 2. 规则验证物料：`wpl-check` 临时容器、`WPL_CHECK_IMAGE` 对应镜像
 3. 观测栈容器：`wp-monitor`、`victoria-metrics`、`victoria-logs`
 4. 如果由同一部署启动，也要停止 `warp-parse`
@@ -470,7 +472,7 @@ wp-monitor 闭环状态：
 卸载前先盘点：
 
 ```bash
-which wparse wpgen wproj wpl-check || true
+which wparse wpgen wproj wpl-check wprescue wp-inst || true
 docker ps -a --filter "name=wp-monitor" --filter "name=victoria-metrics" --filter "name=victoria-logs" --filter "name=warp-parse" --filter "name=wpl-check"
 docker images --format '{{.Repository}}:{{.Tag}}' | grep -E 'wpl-check|wp-labs/wpl-check' || true
 docker compose ps 2>/dev/null || true
@@ -491,7 +493,7 @@ docker rm -f wp-monitor victoria-metrics victoria-logs warp-parse wpl-check 2>/d
 再删除本地二进制：
 
 ```bash
-for bin in wparse wpgen wproj wpl-check; do
+for bin in wparse wpgen wproj wpl-check wprescue wp-inst; do
   path="$(command -v "$bin" 2>/dev/null || true)"
   if [ -n "$path" ]; then
     rm -f "$path"
@@ -502,7 +504,7 @@ done
 验证卸载结果：
 
 ```bash
-command -v wparse wpgen wproj wpl-check || true
+command -v wparse wpgen wproj wpl-check wprescue wp-inst || true
 docker ps -a --filter "name=wp-monitor" --filter "name=victoria-metrics" --filter "name=victoria-logs" --filter "name=warp-parse" --filter "name=wpl-check"
 ```
 
@@ -518,7 +520,7 @@ docker image rm ghcr.io/wp-labs/wp-monitor:latest victoriametrics/victoria-metri
 
 卸载结果必须明确说明：
 
-- 删除了哪些二进制
+- 删除了哪些二进制，包括 `wprescue` 和 `wp-inst`
 - 停止并删除了哪些容器，包括 `wpl-check`、`wp-monitor`、`victoria-metrics`、`victoria-logs`
 - 是否保留或删除了 `WPL_CHECK_IMAGE` 对应镜像
 - 是否保留了 metrics/logs 数据卷
@@ -616,7 +618,7 @@ docker image rm ghcr.io/wp-labs/wp-monitor:latest victoriametrics/victoria-metri
 不要为了回答“安装 wparse，给一个文件到文件示例”去读取 `examples/file_to_file/`；这类请求的第一步是安装工具并运行 `wproj init --work-root "$(pwd)" --mode full`。
 
 ## 其他要求
-- 当卸载wparse时，需要卸载wparse的整套组件：二进制 + `wpl-check` 验证物料 + `wp-monitor` 观测栈容器；数据卷和镜像默认保留，除非用户明确要求彻底清理。
+- 当卸载wparse时，需要卸载wparse的整套组件：二进制（含 `wprescue`、`wp-inst`）+ `wpl-check` 验证物料 + `wp-monitor` 观测栈容器；数据卷和镜像默认保留，除非用户明确要求彻底清理。
 - 如果需要发送数据来验证测试结果，必须给出 `wpgen` 命令，不要生成自定义 sender 脚本。
 - 如果给出部署或联调方案，必须包含 `wp-monitor` 配置或启动说明，以及 monitor 侧验证项。
 - 当提供配置时，无论是否使用知识库，都要提供一个默认知识库配置。

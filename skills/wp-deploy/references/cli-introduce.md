@@ -52,7 +52,7 @@ docker run --rm \
 卸载前盘点：
 
 ```bash
-which wparse wpgen wproj wpl-check || true
+which wparse wpgen wproj wpl-check wprescue wp-inst || true
 docker ps -a --filter "name=wp-monitor" --filter "name=victoria-metrics" --filter "name=victoria-logs" --filter "name=warp-parse" --filter "name=wpl-check"
 docker images --format '{{.Repository}}:{{.Tag}}' | grep -E 'wpl-check|wp-labs/wpl-check' || true
 docker compose ps 2>/dev/null || true
@@ -73,7 +73,7 @@ docker rm -f wp-monitor victoria-metrics victoria-logs warp-parse wpl-check 2>/d
 删除本地二进制：
 
 ```bash
-for bin in wparse wpgen wproj wpl-check; do
+for bin in wparse wpgen wproj wpl-check wprescue wp-inst; do
   path="$(command -v "$bin" 2>/dev/null || true)"
   if [ -n "$path" ]; then
     rm -f "$path"
@@ -84,7 +84,7 @@ done
 验证卸载结果：
 
 ```bash
-command -v wparse wpgen wproj wpl-check || true
+command -v wparse wpgen wproj wpl-check wprescue wp-inst || true
 docker ps -a --filter "name=wp-monitor" --filter "name=victoria-metrics" --filter "name=victoria-logs" --filter "name=warp-parse" --filter "name=wpl-check"
 ```
 
