@@ -54,8 +54,8 @@ prompts:
     - 最终回答必须包含“wp-monitor 闭环状态”段：部署状态、访问地址、是否看到 source/parse/sink 数据、miss 状态、未完成原因
     - 如果 wp-monitor 未部署或未验证，最终回答必须写“业务链路已完成，监控闭环未完成”，不能写“完整闭环已完成”；但除非有明确阻塞证据，不允许停在未部署状态
     - docker compose 观测链路应包含或说明 warp-parse、victoria-metrics、victoria-logs、wp-monitor 的关系
-    - 用户要求卸载 wparse / 清理 WarpParse 环境时，必须同时处理本地二进制、wpl-check 验证物料和部署组件：wparse、wpgen、wproj、wpl-check、wpl-check 容器、warp-parse、wp-monitor、victoria-metrics、victoria-logs
-    - 卸载时优先 docker compose down；没有 compose 文件时按容器名 docker rm -f wp-monitor victoria-metrics victoria-logs warp-parse wpl-check；然后删除本地二进制
+    - 用户要求卸载 wparse / 清理 WarpParse 环境时，必须同时处理本地二进制、wpl-check 验证物料和部署组件：wparse、wpgen、wproj、wpl-check、wprescue、wp-inst、wpl-check 容器、warp-parse、wp-monitor、victoria-metrics、victoria-logs
+    - 卸载时优先 docker compose down；没有 compose 文件时按容器名 docker rm -f wp-monitor victoria-metrics victoria-logs warp-parse wpl-check；然后删除本地二进制 wparse/wpgen/wproj/wpl-check/wprescue/wp-inst
     - 卸载默认保留 metrics/logs 数据卷、项目配置、镜像、WPL_CHECK_IMAGE 和业务输出文件；只有用户明确要求彻底清理或删除数据/镜像时，才允许执行 docker compose down -v、docker volume rm 或 docker image rm
     - 先看现有目录和 references，再决定改哪一层配置；examples 只能作为只读参考，不能作为用户项目运行目录
     - 不得 cd 到 ~/.claude/skills、~/.codex/skills 或本仓库 skills/wp-deploy/examples 下运行示例，也不得要求用户修改 skill 自带示例文件

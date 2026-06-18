@@ -86,6 +86,16 @@
         "name": "wpl-check",
         "description": "WPL/OML 离线验证工具",
         "url": "https://github.com/wp-labs/wpl-check"
+      },
+      {
+        "name": "wprescue",
+        "description": "WarpParse 急救/恢复辅助工具",
+        "url": "https://get.warpparse.ai"
+      },
+      {
+        "name": "wp-inst",
+        "description": "WarpParse 工具链安装器",
+        "url": "https://get.warpparse.ai"
       }
     ]
   },
