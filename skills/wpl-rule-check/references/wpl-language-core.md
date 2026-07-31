@@ -53,7 +53,7 @@ package vendor_product {
 | ISO 8601 | `time_iso` | `2023-05-15T07:09:12Z` |
 | RFC 3339 | `time_3339` | `2022-03-21T12:34:56+00:00` |
 | RFC 2822 | `time_2822` | `Mon, 07 Jul 2025 09:20:32 +0000` |
-| CLF 时间 | `time/clf` | `06/Aug/2019:12:12:19 +0800`（Apache/Nginx） |
+| CLF 时间 | `time_clf` | `06/Aug/2019:12:12:19 +0800`（Apache/Nginx） |
 | Unix 时间戳 | `time_timestamp` | `1647849600` |
 
 ### 网络类型
@@ -72,8 +72,11 @@ package vendor_product {
 | 类型 | 标识符 | 说明 |
 |------|--------|------|
 | 键值对 | `kvarr` | `key=value` 或 `key: value` 格式，可提取子字段 |
+| 快速键值对 | `kvarr_raw` | 同 `kvarr` 语法，未声明的 value 默认按 `chars` 输出 |
+| 单键值对 | `kv` | 单个 `key=value` 或 `key: value` 对 |
 | JSON | `json` | JSON 对象，可提取子字段 |
 | 严格JSON | `exact_json` | 严格验证 JSON 格式 |
+| 坏JSON | `bad_json` | 按原始文本接受（输出类型 `chars`），配合 `json_like` 前置使用 |
 | 数组 | `array` | `[1,2,3]` 或 `["a","b"]` |
 | 数字数组 | `array/digit` | 数字元素数组 |
 | 字符串数组 | `array/chars` | 字符串元素数组 |
@@ -93,6 +96,15 @@ package vendor_product {
 |------|--------|------|
 | 十六进制 | `hex` | `48656c6c6f` |
 | Base64 | `base64` | `aGVsbG8=` |
+
+### 特殊类型
+
+| 类型 | 标识符 | 说明 |
+|------|--------|------|
+| 身份证 | `id_card` | 18 位身份证号 |
+| 手机号 | `mobile_phone` | 11 位手机号 |
+| 协议文本 | `proto_text` | 协议文本解析 |
+| 自动识别 | `auto` | 自动类型推断 |
 
 ---
 
@@ -234,6 +246,28 @@ kvarr\s    // 提取所有 KV，以空格为 KV 对分隔符
 #[copy_raw(name:"raw_msg")]    // 将原始日志行复制到 raw_msg 字段
 ```
 
+### copy_event_parse 注解
+
+把原始 payload 复制给指定 rule 的 parser 解析，产出一条**独立的旁路 record**（不并入当前 record），按目标 rule 的 `wpl_key` 独立路由到对应 sink。
+
+```wpl
+#[copy_event_parse(rule:"/fun/raw_event")]
+rule main { (json(chars@data)) }
+```
+
+- `rule` 的值是目标 rule 的引用：跨包用全路径 `pkg/rule`，同包可用裸名（引擎按当前包名补全）
+- 目标 rule 只解析、不执行其自身注解；通常标 `#[no_match]` 避免被 `parse_event` 自动匹配抢占
+- 引用不存在的 rule 是逻辑错误，引擎拒绝启动
+
+### no_match 注解
+
+显式声明该 rule 不参与 `parse_event` 自动匹配，仅作 `copy_event_parse` 等显式调用的目标（parser 仍保留，供旁路 record 路由）。
+
+```wpl
+#[no_match]
+rule raw_event { (chars\0) }
+```
+
 原始字符串（避免转义）：
 
 ```wpl
@@ -363,7 +397,7 @@ package nginx {
     (
       ip:src_ip,
       2*_,                      // 合并跳过 ident 和 authuser 两个字段
-      time/clf:access_time<[,]>,
+      time_clf:access_time<[,]>,
       http/request:request",
       http/status:status,
       digit:body_bytes_sent,
@@ -378,7 +412,7 @@ package nginx {
 **关键点：**
 - 字段之间空格分隔，**不需要写 `\s`**（空格是默认分隔符）
 - `2*_` 合并跳过连续的 ident 和 authuser 两个字段
-- `time/clf:t<[,]>` — CLF 时间用方括号包裹，必须加 `<[,]>`
+- `time_clf:t<[,]>` — CLF 时间用方括号包裹，必须加 `<[,]>`
 - `http/request:req"` — HTTP 请求行用双引号包裹
 - `chars:ua"` — UA 字段用 `chars` + `"` 引号格式，**不用 `http/agent`**（非标准浏览器 UA 会失败）
 
@@ -441,9 +475,9 @@ ip \s digit       // 分隔符位置错了
 ip\, digit\, chars    // 逗号分隔，最后字段不加 \0
 
 // ❌ 错误：CLF 时间没有用 <[,]> 包裹
-time/clf:t
+time_clf:t
 // ✅ 正确
-time/clf:t<[,]>
+time_clf:t<[,]>
 
 // ✅ N*_ 合并跳过连续字段
 2*_        // 跳过 2 个字段（等同于 _, _）

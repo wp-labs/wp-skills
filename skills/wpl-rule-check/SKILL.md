@@ -53,7 +53,7 @@ dependencies:
 | `key=value` 或 `key: value` 对 | KV：`kvarr(...)` |
 | 有 `\|` 分隔的固定字段 | CEF/固定分隔：多 group + `\|` |
 | 以 `<数字>` 开头 | Syslog pri：`_:pri<<,>>` |
-| Apache/Nginx CLF 格式 | `ip time/clf http/request http/status` |
+| Apache/Nginx CLF 格式 | `ip time_clf http/request http/status` |
 | JSON 前有 syslog 前缀 | Syslog+JSON 复合 |
 | BOM 头（`\xEF\xBB\xBF`） | 需加 `\| strip/bom \|` |
 

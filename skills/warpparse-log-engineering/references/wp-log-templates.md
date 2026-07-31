@@ -19,7 +19,7 @@ rule nginx_clf {
   (
     ip:client_ip,
     2*_,
-    time/clf:timestamp<[,]>,
+    time_clf:timestamp<[,]>,
     http/request:request",
     http/status:status,
     digit:bytes,
@@ -86,7 +86,7 @@ rule apache_combined {
     ip:client_ip,
     _,
     chars:user\ ,
-    time/clf:timestamp<[,]>,
+    time_clf:timestamp<[,]>,
     http/request:request",
     http/status:status,
     digit:bytes,
@@ -336,7 +336,7 @@ wpl-check sample .
 
 ### 3. 类型选择优先级
 
-1. 具体类型：`ip`, `time/clf`, `http/request`
+1. 具体类型：`ip`, `time_clf`, `http/request`
 2. 通用类型：`digit`, `chars`
 3. 结构类型：`json(...)`, `kvarr(...)`
 
