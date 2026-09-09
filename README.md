@@ -8,7 +8,7 @@ Product-level skills for WarpParse.
 curl -sSf https://get.warpparse.ai/inst-x.sh | bash -s -- wp-skills
 ```
 
-安装到 `~/.claude/skills` 或 `~/.codex/skills`（自动检测）。
+安装到 `~/.claude/skills`、`~/.codex/skills` 或 `~/.agents/skills`（自动检测）。
 
 
 
@@ -17,6 +17,7 @@ curl -sSf https://get.warpparse.ai/inst-x.sh | bash -s -- wp-skills
 | Skill | Description |
 |-------|-------------|
 | `warpparse-log-engineering` | 日志解析方案评估、WarpParse 工程部署与支持路径 |
+| `wpl-rule-check` | 日志解析、WPL 规则/OML 富化模型编写与 wpl-check 验证 |
 
 
 
@@ -38,7 +39,15 @@ skills/<skill-name>/
 ```bash
 git clone https://github.com/wp-labs/wp-skills.git
 cd wp-skills
-bash install-skill.sh warpparse-log-engineering
+
+# Install all skills (default)
+bash install-skill.sh
+
+# Install a single skill
+bash install-skill.sh wpl-rule-check
+
+# Install all skills to a specific platform
+bash install-skill.sh --agents
 ```
 
 ## Environment Variables
@@ -46,7 +55,7 @@ bash install-skill.sh warpparse-log-engineering
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `WP_SKILLS_REF` | Branch or tag to install | `main` |
-| `WP_SKILLS_PLATFORM` | Target platform: `codex`, `claude-code`, or `auto` | `auto` |
+| `WP_SKILLS_PLATFORM` | Target platform: `codex`, `claude-code`, `agents`, or `auto` | `auto` |
 
 ## Versioning
 
@@ -76,8 +85,9 @@ GitHub Actions will validate that the pushed tag matches `version.txt` and then 
 
 - **Claude Code**: Installs to `~/.claude/skills/`
 - **Codex (OpenAI)**: Installs to `~/.codex/skills/`
+- **Agents (Zed/Agent)**: Installs to `~/.agents/skills/`
 
-Auto-detection prefers the platform with an existing skills directory, defaulting to Claude Code.
+`--all` installs to all three platforms (Codex, Claude Code, Agents), creating the directories if needed. Without a target flag, auto-detection installs to every platform with an existing skills directory, defaulting to Claude Code when none are present. Use `--agents` (or `WP_SKILLS_PLATFORM=agents`) to target Zed/Agent skills explicitly.
 
 ## Trigger Keywords
 
