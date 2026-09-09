@@ -53,7 +53,7 @@ package vendor_product {
 | ISO 8601 | `time_iso` | `2023-05-15T07:09:12Z` |
 | RFC 3339 | `time_3339` | `2022-03-21T12:34:56+00:00` |
 | RFC 2822 | `time_2822` | `Mon, 07 Jul 2025 09:20:32 +0000` |
-| CLF 时间 | `time_clf` | `06/Aug/2019:12:12:19 +0800`（Apache/Nginx） |
+| CLF 时间 | `time/clf` | `06/Aug/2019:12:12:19 +0800`（Apache/Nginx） |
 | Unix 时间戳 | `time_timestamp` | `1647849600` |
 
 ### 网络类型
@@ -397,7 +397,7 @@ package nginx {
     (
       ip:src_ip,
       2*_,                      // 合并跳过 ident 和 authuser 两个字段
-      time_clf:access_time<[,]>,
+      time/clf:access_time<[,]>,
       http/request:request",
       http/status:status,
       digit:body_bytes_sent,
@@ -412,7 +412,7 @@ package nginx {
 **关键点：**
 - 字段之间空格分隔，**不需要写 `\s`**（空格是默认分隔符）
 - `2*_` 合并跳过连续的 ident 和 authuser 两个字段
-- `time_clf:t<[,]>` — CLF 时间用方括号包裹，必须加 `<[,]>`
+- `time/clf:t<[,]>` — CLF 时间用方括号包裹，必须加 `<[,]>`
 - `http/request:req"` — HTTP 请求行用双引号包裹
 - `chars:ua"` — UA 字段用 `chars` + `"` 引号格式，**不用 `http/agent`**（非标准浏览器 UA 会失败）
 
@@ -475,9 +475,9 @@ ip \s digit       // 分隔符位置错了
 ip\, digit\, chars    // 逗号分隔，最后字段不加 \0
 
 // ❌ 错误：CLF 时间没有用 <[,]> 包裹
-time_clf:t
+time/clf:t
 // ✅ 正确
-time_clf:t<[,]>
+time/clf:t<[,]>
 
 // ✅ N*_ 合并跳过连续字段
 2*_        // 跳过 2 个字段（等同于 _, _）

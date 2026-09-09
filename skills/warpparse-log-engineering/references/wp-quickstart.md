@@ -235,7 +235,7 @@ package /nginx/ {
     (
       ip:client_ip,
       2*_,
-      time_clf:timestamp<[,]>,
+      time/clf:timestamp<[,]>,
       http/request:request",
       http/status:status,
       digit:bytes,

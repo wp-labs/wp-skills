@@ -225,7 +225,7 @@ package nginx {
     (
       ip:src_ip,
       2*_,
-      time_clf:access_time<[,]>,
+      time/clf:access_time<[,]>,
       http/request:request",
       http/status:status,
       digit:body_bytes_sent,
@@ -240,7 +240,7 @@ package nginx {
 **关键要点**：
 - 字段之间空格分隔，**不需要写 `\s`**（空格是默认分隔符）
 - `2*_` — 合并跳过 ident 和 authuser 两个字段（等同于 `_, _`）
-- `time_clf:access_time<[,]>` — CLF 时间用方括号包裹，必须加 `<[,]>`
+- `time/clf:access_time<[,]>` — CLF 时间用方括号包裹，必须加 `<[,]>`
 - `http/request:request"` — HTTP 请求行用双引号包裹
 - `chars:user_agent"` — UA 字段用 `chars` + `"` 引号格式，**不用 `http/agent`**（非浏览器 UA 会失败）
 
@@ -403,6 +403,6 @@ rule tab_kv_log {
 | `f_chars_has(type, "login")` | `f_chars_has(type, login)` | 过滤值不加引号 |
 | `ip time chars` | `ip:src_ip, time:ts, chars:msg` | 字段必须命名；空格分隔不写 `\s`；最后字段不写 `\0` |
 | `http/agent:ua` | `chars:ua` | 非浏览器 UA 用 chars |
-| `time_clf:t` | `time_clf:t<[,]>` | CLF 时间用方括号包裹 |
+| `time/clf:t` | `time/clf:t<[,]>` | CLF 时间用方括号包裹 |
 | `json(chars@type) \| f_chars_has(type)` | `json(chars@type:type) \| f_chars_has(type, target)` | filter 需要值 |
 | `kvarr\| f_chars_has(k, v)` | `kvarr\s \| f_chars_has(k, v)` | kvarr 需要分隔符 |
