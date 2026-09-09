@@ -1,0 +1,11 @@
+[sink_group]
+name = "all"
+oml = ["*"]
+
+# vlog
+[[sink_group.sinks]]
+name = "victorialogs_output"
+connect = "victorialogs_sink"
+[sink_group.sinks.params]
+endpoint = "http://victoria-logs:9428"
+api_path = "/insert/jsonline"

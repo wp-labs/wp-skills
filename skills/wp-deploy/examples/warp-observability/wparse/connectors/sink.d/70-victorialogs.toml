@@ -1,0 +1,8 @@
+[[connectors]]
+id = "victorialogs_sink"
+type = "victorialogs"
+allow_override = ["endpoint", "api_path", "timestamp_field", "timeout_secs","batch_size","tags"]
+[connectors.params]
+endpoint = "http://victoria-logs:9428"
+api_path = "/insert/jsonline"
+timeout_secs = 3

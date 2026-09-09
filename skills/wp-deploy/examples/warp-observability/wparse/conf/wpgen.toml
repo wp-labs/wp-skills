@@ -1,0 +1,26 @@
+version = "1.0"
+
+[generator]
+count = 3
+speed = 1000
+parallel = 2
+
+# [output]
+# connect = "file_raw_sink"
+
+# [output.params]
+# base = "data/in_dat"
+# file = "gen.dat"
+
+
+[output]
+name = "gen_out"
+connect = "tcp_sink"
+
+[output.params]
+port = 19002
+
+[logging]
+level = "warn"
+output = "file"
+file_path = "./data/logs"

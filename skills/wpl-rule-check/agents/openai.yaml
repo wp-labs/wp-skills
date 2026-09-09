@@ -124,6 +124,7 @@ prompts:
 
     **Pre-flight 通过后，按以下步骤执行：**
 
+    0. 先执行 `command -v wpl-check` 确认部署流程已经准备好运行时；如果缺失，停止并说明需要切换到 wp-deploy 补齐 wpl-check 部署要求，不得在本 skill 中临时设计安装/卸载方案
     1. 在当前工作目录创建测试文件：`parse.wpl`（WPL 规则）、`sample.dat`（日志样本）
     2. 执行：`wpl-check syntax parse.wpl`（失败 → 修正重试）
     3. 执行：`wpl-check sample parse.wpl sample.dat`（失败 → 修正重试）
@@ -153,10 +154,11 @@ prompts:
 
     ## 职责边界
 
-    不处理以下内容（告知用户切换到 warpparse-log-engineering skill）：
+    不处理以下内容（告知用户切换到 wp-deploy skill）：
     - WarpParse 是否适合当前场景
     - wproj init / 工程初始化
     - source/sink/connector 配置
+    - wpl-check 安装、容器镜像配置和卸载生命周期
     - 生产部署和 rollout
 
     参考 SKILL.md 和 references/ 下的文档来指导回答。
@@ -185,7 +187,7 @@ tools:
     - oml-enrichment-patterns.md
 
 routing:
-  warpparse-log-engineering:
-    condition: "ANY of: 询问 WarpParse 是否适合 / 工程初始化 / source/sink/connector 配置 / 生产部署"
-    action: "告知用户此问题属于工程化范畴，建议切换到 warpparse-log-engineering skill"
+  wp-deploy:
+    condition: "ANY of: 工程初始化 / source/sink/connector 配置 / wpgen 配置 / wp-monitor 配置 / 生产部署"
+    action: "告知用户此问题属于部署配置范畴，建议切换到 wp-deploy skill"
     mandatory: false

@@ -1,0 +1,12 @@
+version = "2.0"
+
+[sink_group]
+name = "miss"
+oml = []
+
+[[sink_group.sinks]]
+name = "miss_output"
+connect = "file_json_sink"
+[sink_group.sinks.params]
+base = "./data/out_dat"
+file = "example.json"
