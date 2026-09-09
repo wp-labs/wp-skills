@@ -3,17 +3,22 @@ set -euo pipefail
 
 usage() {
   cat <<EOF
-Usage: $0 <skill-name> [options]
+Usage: $0 [options] [skill-name]
 
-Install a skill from wp-skills repository or other supported sources.
+Install skills from the wp-skills / wpl-check repositories into agent skill
+directories (Codex, Claude Code, Zed/Agent, or a custom path).
+
+With no skill-name, all available skills are installed.
 
 Arguments:
-  skill-name    Name of the skill to install (e.g., warpparse-log-engineering)
+  skill-name    Optional. Install only this skill (e.g., warpparse-log-engineering).
+                Default: install all available skills.
 
 Options:
   --codex           Install to Codex CLI (~/.codex/skills/)
   --claude          Install to Claude Code (~/.claude/skills/)
-  --all             Install to all available platforms (default)
+  --agents          Install to Zed/Agent skills (~/.agents/skills/)
+  --all             Install to Codex, Claude Code, and Agents
   --dir <path>      Install to custom directory
 
 Environment:
@@ -21,10 +26,11 @@ Environment:
   WP_SKILLS_SOURCE    Custom source repo (default: wp-labs/wp-skills)
 
 Examples:
-  $0 warpparse-log-engineering
+  $0                       # install all skills (auto-detected platforms)
+  $0 --agents              # install all skills to Zed/Agent
   $0 warpparse-log-engineering --claude
   $0 wpl-rule-check --all
-  $0 warpparse-log-engineering --dir ~/my-skills
+  $0 --dir ~/my-skills
 
 Supported skill sources:
   - wp-skills repo (default): warpparse-log-engineering, etc.
@@ -49,6 +55,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --claude)
       target_dirs+=("$HOME/.claude/skills")
+      shift
+      ;;
+    --agents)
+      target_dirs+=("$HOME/.agents/skills")
       shift
       ;;
     --all)
@@ -81,33 +91,31 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [[ -z "$skill_name" ]]; then
-  usage
-  exit 2
-fi
-
 # Determine repo root
 if [[ -n "${BASH_SOURCE[0]:-}" ]]; then
   repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 else
   repo_root=""
 fi
-src_dir=""
-tmp_dir=""
 
+tmp_root=""
 cleanup() {
-  if [[ -n "$tmp_dir" && -d "$tmp_dir" ]]; then
-    rm -rf "$tmp_dir"
+  if [[ -n "$tmp_root" && -d "$tmp_root" ]]; then
+    rm -rf "$tmp_root"
   fi
 }
 trap cleanup EXIT
 
-# Auto-detect available platforms if no explicit targets
+# Determine install targets
 if [[ ${#target_dirs[@]} -eq 0 ]]; then
-  if [[ "$install_all" == "true" ]] || [[ -z "${WP_SKILLS_PLATFORM:-}" ]]; then
-    # Install to all available platforms
+  if [[ "$install_all" == "true" ]]; then
+    # --all: publish to every supported platform (directories are created on install)
+    target_dirs+=("$HOME/.codex/skills" "$HOME/.claude/skills" "$HOME/.agents/skills")
+  elif [[ -z "${WP_SKILLS_PLATFORM:-}" ]]; then
+    # No explicit target: install to every platform with an existing skills directory
     [[ -d "$HOME/.codex/skills" ]] && target_dirs+=("$HOME/.codex/skills")
     [[ -d "$HOME/.claude/skills" ]] && target_dirs+=("$HOME/.claude/skills")
+    [[ -d "$HOME/.agents/skills" ]] && target_dirs+=("$HOME/.agents/skills")
 
     # If no platform directories exist, create default
     if [[ ${#target_dirs[@]} -eq 0 ]]; then
@@ -122,11 +130,16 @@ if [[ ${#target_dirs[@]} -eq 0 ]]; then
       claude-code)
         target_dirs+=("$HOME/.claude/skills")
         ;;
+      agents)
+        target_dirs+=("$HOME/.agents/skills")
+        ;;
       auto)
         if [[ -d "$HOME/.claude/skills" ]]; then
           target_dirs+=("$HOME/.claude/skills")
         elif [[ -d "$HOME/.codex/skills" ]]; then
           target_dirs+=("$HOME/.codex/skills")
+        elif [[ -d "$HOME/.agents/skills" ]]; then
+          target_dirs+=("$HOME/.agents/skills")
         else
           target_dirs+=("$HOME/.claude/skills")
         fi
@@ -138,8 +151,31 @@ if [[ ${#target_dirs[@]} -eq 0 ]]; then
   fi
 fi
 
+# --- Resolve skill sources -------------------------------------------------
+
+clone_repo() {
+  # $1 = repo (org/name). Clones once into $tmp_root/repos and echoes the path.
+  local repo="$1"
+  local cache_dir="$tmp_root/repos"
+  local out="$cache_dir/$(printf '%s' "$repo" | tr '/' '_')"
+
+  if [[ ! -d "$out/.git" ]]; then
+    mkdir -p "$cache_dir"
+    rm -rf "$out"
+    echo "Cloning $repo (ref: ${WP_SKILLS_REF:-main})..."
+    if ! git clone --depth 1 --branch "${WP_SKILLS_REF:-main}" "https://github.com/$repo.git" "$out" 2>/dev/null; then
+      if ! git clone --depth 1 "https://github.com/$repo.git" "$out" 2>/dev/null; then
+        echo "Failed to clone $repo" >&2
+        exit 1
+      fi
+    fi
+  fi
+  echo "$out"
+}
+
+# Resolve a single skill name -> src_dir (local repo first, then remote).
 resolve_local_src() {
-  local candidate="$repo_root/skills/$skill_name"
+  local candidate="$repo_root/skills/$1"
   if [[ -d "$candidate" ]]; then
     src_dir="$candidate"
     return 0
@@ -148,74 +184,167 @@ resolve_local_src() {
 }
 
 resolve_remote_src() {
-  local ref="${WP_SKILLS_REF:-main}"
+  local name="$1"
   local source_repo="${WP_SKILLS_SOURCE:-}"
-  local skill_subdir="skills/$skill_name"
+  local skill_subdir="skills/$name"
 
   # Auto-detect source repo based on skill name
   if [[ -z "$source_repo" ]]; then
-    case "$skill_name" in
+    case "$name" in
       wpl-rule-check)
         source_repo="wp-labs/wpl-check"
         skill_subdir="tools/skills/wpl-rule-check"
         ;;
       *)
         source_repo="wp-labs/wp-skills"
-        skill_subdir="skills/$skill_name"
+        skill_subdir="skills/$name"
         ;;
     esac
   fi
 
-  tmp_dir="$(mktemp -d "${TMPDIR:-/tmp}/wp-skills.XXXXXX")"
-
-  echo "Cloning $source_repo (ref: $ref)..."
-  if ! git clone --depth 1 --branch "$ref" "https://github.com/$source_repo.git" "$tmp_dir/repo" 2>/dev/null; then
-    if ! git clone --depth 1 "https://github.com/$source_repo.git" "$tmp_dir/repo" 2>/dev/null; then
-      echo "Failed to clone $source_repo" >&2
-      exit 1
-    fi
+  if [[ -z "$tmp_root" ]]; then
+    tmp_root="$(mktemp -d "${TMPDIR:-/tmp}/wp-skills.XXXXXX")"
   fi
 
-  src_dir="$tmp_dir/repo/$skill_subdir"
+  local clone_dir
+  clone_dir="$(clone_repo "$source_repo")"
+  src_dir="$clone_dir/$skill_subdir"
 
   if [[ ! -d "$src_dir" ]]; then
-    echo "Skill not found: $skill_name" >&2
+    echo "Skill not found: $name" >&2
     echo "Available skills:" >&2
-    ls -1 "$tmp_dir/repo/skills/" 2>/dev/null >&2 || ls -1 "$tmp_dir/repo/tools/skills/" 2>/dev/null >&2 || true
+    ls -1 "$clone_dir/skills/" 2>/dev/null >&2 || ls -1 "$clone_dir/tools/skills/" 2>/dev/null >&2 || true
     exit 1
   fi
 }
 
-# Resolve source
-if ! resolve_local_src; then
-  echo "Fetching skill from GitHub (ref: ${WP_SKILLS_REF:-main})..."
-  resolve_remote_src
+in_list() {
+  local needle="$1"
+  shift
+  local item
+  for item in "$@"; do
+    [[ "$item" == "$needle" ]] && return 0
+  done
+  return 1
+}
+
+# Collect the list of skills to install.
+# names[i] paired with srcs[i] (resolved source directory).
+names=()
+srcs=()
+
+collect_local_skills() {
+  # Enumerate all skills shipped in the local checkout.
+  local d
+  for d in "$repo_root"/skills/*/; do
+    [[ -f "$d/SKILL.md" ]] || continue
+    local name
+    name="$(basename "$d")"
+    # Guard: expanding an empty array under `set -u` fails on bash 3.2 (macOS)
+    if [[ ${#names[@]} -gt 0 ]] && in_list "$name" "${names[@]}"; then
+      continue
+    fi
+    names+=("$name")
+    srcs+=("$d")
+  done
+}
+
+collect_remote_dir_skills() {
+  # Enumerate skills under a cloned repo subdirectory, e.g. skills/ or tools/skills/.
+  local repo="$1"
+  local subdir="$2"
+  local clone_dir
+  clone_dir="$(clone_repo "$repo")"
+
+  local d
+  for d in "$clone_dir/$subdir"/*/; do
+    [[ -d "$d" && -f "$d/SKILL.md" ]] || continue
+    local name
+    name="$(basename "$d")"
+    # Guard: expanding an empty array under `set -u` fails on bash 3.2 (macOS)
+    if [[ ${#names[@]} -gt 0 ]] && in_list "$name" "${names[@]}"; then
+      continue
+    fi
+    names+=("$name")
+    srcs+=("$d")
+  done
+}
+
+if [[ -n "$skill_name" ]]; then
+  # Install a single skill
+  if ! resolve_local_src "$skill_name"; then
+    echo "Fetching skill from GitHub (ref: ${WP_SKILLS_REF:-main})..."
+    resolve_remote_src "$skill_name"
+  fi
+  names+=("$skill_name")
+  srcs+=("$src_dir")
+else
+  # Install all available skills
+  if [[ -d "$repo_root/skills" ]]; then
+    collect_local_skills
+  fi
+  if [[ ${#names[@]} -eq 0 ]]; then
+    # No local checkout: enumerate from the remote repos
+    if [[ -z "$tmp_root" ]]; then
+      tmp_root="$(mktemp -d "${TMPDIR:-/tmp}/wp-skills.XXXXXX")"
+    fi
+    if [[ -n "${WP_SKILLS_SOURCE:-}" ]]; then
+      collect_remote_dir_skills "$WP_SKILLS_SOURCE" "skills"
+      collect_remote_dir_skills "$WP_SKILLS_SOURCE" "tools/skills"
+    else
+      collect_remote_dir_skills "wp-labs/wp-skills" "skills"
+      collect_remote_dir_skills "wp-labs/wp-skills" "tools/skills"
+      collect_remote_dir_skills "wp-labs/wpl-check" "tools/skills"
+    fi
+  fi
+  if [[ ${#names[@]} -eq 0 ]]; then
+    echo "No skills found to install." >&2
+    exit 1
+  fi
 fi
 
-# Install to all target directories
-echo ""
-for target_base in "${target_dirs[@]}"; do
-  dst_dir="$target_base/$skill_name"
+# --- Install -----------------------------------------------------------------
 
-  mkdir -p "$target_base"
-  rm -rf "$dst_dir"
-  cp -R "$src_dir" "$dst_dir"
+installed_count=0
+for i in "${!names[@]}"; do
+  name="${names[$i]}"
+  src_dir="${srcs[$i]}"
 
-  # Detect platform name for display
-  platform="custom"
-  case "$target_base" in
-    */.codex/skills) platform="codex" ;;
-    */.claude/skills) platform="claude-code" ;;
-  esac
+  if [[ ! -d "$src_dir" ]]; then
+    echo "Error: source not found for skill: $name ($src_dir)" >&2
+    exit 1
+  fi
 
-  echo "Installed: $skill_name"
-  echo "Platform:  $platform"
-  echo "Location:  $dst_dir"
-  echo ""
+  for target_base in "${target_dirs[@]}"; do
+    dst_dir="$target_base/$name"
+
+    mkdir -p "$target_base"
+    rm -rf "$dst_dir"
+    cp -R "$src_dir" "$dst_dir"
+
+    # Detect platform name for display
+    platform="custom"
+    case "$target_base" in
+      */.codex/skills) platform="codex" ;;
+      */.claude/skills) platform="claude-code" ;;
+      */.agents/skills) platform="agents" ;;
+    esac
+
+    echo "Installed: $name"
+    echo "Platform:  $platform"
+    echo "Location:  $dst_dir"
+    echo ""
+    installed_count=$((installed_count + 1))
+  done
 done
 
-echo "Files installed:"
-find "$dst_dir" -type f 2>/dev/null | sed 's|'"$dst_dir"'||' | sed 's|^/|  - |' | head -20
-if [[ $(find "$dst_dir" -type f | wc -l) -gt 20 ]]; then
-  echo "  ... and more"
+# Show the file list when a single skill was installed
+if [[ ${#names[@]} -eq 1 && "$installed_count" -gt 0 ]]; then
+  echo "Files installed:"
+  find "$dst_dir" -type f 2>/dev/null | sed 's|'"$dst_dir"'||' | sed 's|^/|  - |' | head -20
+  if [[ $(find "$dst_dir" -type f | wc -l) -gt 20 ]]; then
+    echo "  ... and more"
+  fi
 fi
+
+echo "Done: $installed_count install(s), ${#names[@]} skill(s)."
