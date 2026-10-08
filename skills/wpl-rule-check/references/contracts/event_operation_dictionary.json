@@ -1,0 +1,1126 @@
+{
+ "schema_version": 1,
+ "dictionary_version": "2026-08-05",
+ "event_type_baseline": {
+  "standard": "Google Security Operations UDM Metadata.EventType",
+  "snapshot_date": "2026-07-20",
+  "count": 105
+ },
+ "source_baselines": {
+  "ocsf": {
+   "version": "1.8.0",
+   "git_commit": "6fa6499a0f8c9f449d342816e90e5f687c224b0a",
+   "source": "https://github.com/ocsf/ocsf-schema/tree/1.8.0",
+   "catalog_representation": "class-specific activity captions normalized to lower snake_case; numeric activity_id values remain upstream interoperability metadata and are not written to SDM operation",
+   "implicit_activity_values": [
+    "unknown",
+    "other"
+   ],
+   "policy": "unknown and other are retained in the source snapshot but are not valid SDM operation values"
+  },
+  "asim": {
+   "source": "https://learn.microsoft.com/azure/sentinel/normalization-about-schemas",
+   "git_source": "https://github.com/MicrosoftDocs/defender-docs/tree/public/sentinel",
+   "git_commit": "fc8363adb936d82f2976f1b692502e940744f862",
+   "snapshot_date": "2026-07-24",
+   "policy": "EventType and EventSubType are schema-specific; source-specific originals remain outside operation"
+  }
+ },
+ "ocsf_activity_catalog": {
+  "base_event": [
+   "unknown",
+   "other"
+  ],
+  "api_activity": [
+   "create",
+   "read",
+   "update",
+   "delete"
+  ],
+  "application_error": [
+   "general_error",
+   "translation_error"
+  ],
+  "application_lifecycle": [
+   "install",
+   "remove",
+   "start",
+   "stop",
+   "restart",
+   "enable",
+   "disable",
+   "update"
+  ],
+  "datastore_activity": [
+   "read",
+   "update",
+   "connect",
+   "query",
+   "write",
+   "create",
+   "delete",
+   "list",
+   "encrypt",
+   "decrypt"
+  ],
+  "file_hosting": [
+   "upload",
+   "download",
+   "update",
+   "delete",
+   "rename",
+   "copy",
+   "move",
+   "restore",
+   "preview",
+   "lock",
+   "unlock",
+   "share",
+   "unshare",
+   "open",
+   "sync",
+   "unsync",
+   "access_check"
+  ],
+  "scan_activity": [
+   "started",
+   "completed",
+   "cancelled",
+   "duration_violation",
+   "pause_violation",
+   "error",
+   "paused",
+   "resumed",
+   "restarted",
+   "delayed"
+  ],
+  "web_resource_access_activity": [
+   "access_grant",
+   "access_deny",
+   "access_revoke",
+   "access_error"
+  ],
+  "web_resources_activity": [
+   "create",
+   "read",
+   "update",
+   "delete",
+   "search",
+   "import",
+   "export",
+   "share"
+  ],
+  "discovery": [
+   "log",
+   "collect"
+  ],
+  "discovery_result": [
+   "query"
+  ],
+  "data_security_finding": [
+   "create",
+   "update",
+   "close",
+   "suppressed"
+  ],
+  "finding": [
+   "create",
+   "update",
+   "close"
+  ],
+  "incident_finding": [
+   "create",
+   "update",
+   "close"
+  ],
+  "security_finding": [
+   "create",
+   "update",
+   "close"
+  ],
+  "account_change": [
+   "create",
+   "enable",
+   "password_change",
+   "password_reset",
+   "disable",
+   "delete",
+   "attach_policy",
+   "detach_policy",
+   "lock",
+   "mfa_factor_enable",
+   "mfa_factor_disable",
+   "unlock"
+  ],
+  "authentication": [
+   "logon",
+   "logoff",
+   "authentication_ticket",
+   "service_ticket_request",
+   "service_ticket_renew",
+   "preauth",
+   "account_switch"
+  ],
+  "authorize_session": [
+   "assign_privileges",
+   "assign_groups"
+  ],
+  "entity_management": [
+   "create",
+   "read",
+   "update",
+   "delete",
+   "move",
+   "enroll",
+   "unenroll",
+   "enable",
+   "disable",
+   "activate",
+   "deactivate",
+   "suspend",
+   "resume"
+  ],
+  "group_management": [
+   "assign_privileges",
+   "revoke_privileges",
+   "add_user",
+   "remove_user",
+   "delete",
+   "create",
+   "add_subgroup",
+   "remove_subgroup"
+  ],
+  "user_access": [
+   "assign_privileges",
+   "revoke_privileges"
+  ],
+  "dhcp_activity": [
+   "discover",
+   "offer",
+   "request",
+   "decline",
+   "ack",
+   "nak",
+   "release",
+   "inform",
+   "expire"
+  ],
+  "dns_activity": [
+   "query",
+   "response",
+   "traffic"
+  ],
+  "email_activity": [
+   "send",
+   "receive",
+   "scan",
+   "trace",
+   "mta_relay"
+  ],
+  "email_file_activity": [
+   "send",
+   "receive",
+   "scan"
+  ],
+  "email_url_activity": [
+   "send",
+   "receive",
+   "scan"
+  ],
+  "ftp_activity": [
+   "put",
+   "get",
+   "poll",
+   "delete",
+   "rename",
+   "list"
+  ],
+  "http_activity": [
+   "connect",
+   "delete",
+   "get",
+   "head",
+   "options",
+   "post",
+   "put",
+   "trace",
+   "patch"
+  ],
+  "network_activity": [
+   "open",
+   "close",
+   "reset",
+   "fail",
+   "refuse",
+   "traffic",
+   "listen"
+  ],
+  "network_file_activity": [
+   "upload",
+   "download",
+   "update",
+   "delete",
+   "rename",
+   "copy",
+   "move",
+   "restore",
+   "preview",
+   "lock",
+   "unlock",
+   "share",
+   "unshare",
+   "open",
+   "sync",
+   "unsync"
+  ],
+  "ntp_activity": [
+   "unknown",
+   "symmetric_active_exchange",
+   "symmetric_passive_response",
+   "client_synchronization",
+   "server_response",
+   "broadcast",
+   "control",
+   "private_use_case",
+   "other"
+  ],
+  "rdp_activity": [
+   "initial_request",
+   "initial_response",
+   "connect_request",
+   "connect_response",
+   "tls_handshake",
+   "traffic",
+   "disconnect",
+   "reconnect"
+  ],
+  "smb_activity": [
+   "file_supersede",
+   "file_open",
+   "file_create",
+   "file_open_if",
+   "file_overwrite",
+   "file_overwrite_if"
+  ],
+  "ssh_activity": [
+   "open",
+   "close",
+   "reset",
+   "fail",
+   "refuse",
+   "traffic",
+   "listen"
+  ],
+  "tunnel_activity": [
+   "unknown",
+   "open",
+   "close",
+   "renew",
+   "other"
+  ],
+  "remediation_activity": [
+   "isolate",
+   "evict",
+   "restore",
+   "harden",
+   "detect"
+  ],
+  "event_log_actvity": [
+   "clear",
+   "delete",
+   "export",
+   "archive",
+   "rotate",
+   "start",
+   "stop",
+   "restart",
+   "enable",
+   "disable"
+  ],
+  "file_activity": [
+   "create",
+   "read",
+   "update",
+   "delete",
+   "rename",
+   "set_attributes",
+   "set_security",
+   "get_attributes",
+   "get_security",
+   "encrypt",
+   "decrypt",
+   "mount",
+   "unmount",
+   "open"
+  ],
+  "kernel_activity": [
+   "create",
+   "read",
+   "delete",
+   "invoke"
+  ],
+  "kernel_extension_activity": [
+   "load",
+   "unload"
+  ],
+  "memory_activity": [
+   "allocate_page",
+   "modify_page",
+   "delete_page",
+   "buffer_overflow",
+   "disable_dep",
+   "enable_dep",
+   "read",
+   "write",
+   "map_view"
+  ],
+  "module_activity": [
+   "load",
+   "unload",
+   "invoke"
+  ],
+  "peripheral_activity": [
+   "connect",
+   "disconnect",
+   "enable",
+   "disable",
+   "eject"
+  ],
+  "process_activity": [
+   "launch",
+   "terminate",
+   "open",
+   "inject",
+   "set_user_id"
+  ],
+  "scheduled_job_activity": [
+   "create",
+   "update",
+   "delete",
+   "enable",
+   "disable",
+   "start"
+  ],
+  "script_activity": [
+   "execute"
+  ],
+  "airborne_broadcast_activity": [
+   "unknown",
+   "capture",
+   "record",
+   "other"
+  ],
+  "drone_flights_activity": [
+   "unknown",
+   "capture",
+   "record",
+   "other"
+  ]
+ },
+ "ocsf_secondary_catalog": {
+  "process_activity.launch_type_id": [
+   "unknown",
+   "spawn",
+   "fork",
+   "exec",
+   "other"
+  ],
+  "process_activity.injection_type_id": [
+   "unknown",
+   "remote_thread",
+   "load_library",
+   "queue_apc",
+   "other"
+  ]
+ },
+ "asim_catalog": {
+  "Alert.EventType": [
+   "alert"
+  ],
+  "Alert.EventSubType": [
+   "threat",
+   "suspicious_activity",
+   "anomaly",
+   "compliance_violation"
+  ],
+  "Authentication.EventType": [
+   "logon",
+   "logoff",
+   "elevate"
+  ],
+  "Authentication.EventSubType": [
+   "system",
+   "interactive",
+   "remote_interactive",
+   "service",
+   "remote_service",
+   "remote",
+   "assume_role"
+  ],
+  "Audit.EventType": [
+   "set",
+   "read",
+   "create",
+   "delete",
+   "execute",
+   "install",
+   "clear",
+   "enable",
+   "disable",
+   "initialize",
+   "start",
+   "stop",
+   "other"
+  ],
+  "DHCP.EventType": [
+   "assign",
+   "renew",
+   "release",
+   "dns_update"
+  ],
+  "DNS.EventType": [
+   "query",
+   "iquery",
+   "status",
+   "notify",
+   "update",
+   "dso"
+  ],
+  "DNS.EventSubType": [
+   "request",
+   "response"
+  ],
+  "FileEvent.EventType": [
+   "file_accessed",
+   "file_created",
+   "file_modified",
+   "file_deleted",
+   "file_renamed",
+   "file_copied",
+   "file_moved",
+   "folder_created",
+   "folder_deleted",
+   "folder_moved",
+   "folder_modified",
+   "file_created_or_modified"
+  ],
+  "FileEvent.EventSubType": [
+   "upload",
+   "checkin",
+   "download",
+   "preview",
+   "checkout",
+   "extended",
+   "recycled",
+   "versions",
+   "site"
+  ],
+  "NetworkSession.EventType": [
+   "endpoint_network_session",
+   "network_session",
+   "l2_network_session",
+   "ids",
+   "flow"
+  ],
+  "NetworkSession.EventSubType": [
+   "start",
+   "end"
+  ],
+  "ProcessEvent.EventType": [
+   "process_created",
+   "process_terminated"
+  ],
+  "RegistryEvent.EventType": [
+   "registry_key_created",
+   "registry_key_deleted",
+   "registry_key_renamed",
+   "registry_value_deleted",
+   "registry_value_set"
+  ],
+  "UserManagement.EventType": [
+   "user_created",
+   "user_deleted",
+   "user_modified",
+   "user_locked",
+   "user_unlocked",
+   "user_disabled",
+   "user_enabled",
+   "password_changed",
+   "password_reset",
+   "group_created",
+   "group_deleted",
+   "group_modified",
+   "user_added_to_group",
+   "user_removed_from_group",
+   "group_enumerated",
+   "user_read",
+   "group_read"
+  ],
+  "UserManagement.EventSubType": [
+   "password",
+   "hash"
+  ],
+  "WebSession.EventType": [
+   "http_session",
+   "web_server_session",
+   "api_request"
+  ]
+ },
+ "normalization_aliases": {
+  "asim.NetworkSession.EventSubType.start": "open",
+  "asim.NetworkSession.EventSubType.end": "close",
+  "asim.DNS.EventSubType.request": "query",
+  "ocsf.process_activity.launch_type_id.spawn": "spawn",
+  "ocsf.process_activity.launch_type_id.fork": "fork",
+  "ocsf.process_activity.launch_type_id.exec": "exec",
+  "legacy.execve": "exec",
+  "legacy.create_process": "spawn",
+  "legacy.remote_thread": "remote_thread",
+  "legacy.queue_apc": "queue_apc"
+ },
+ "mapping_status_definitions": {
+  "FULL": "all applicable upstream operation values are represented or normalized to an SDM operation",
+  "PARTIAL": "the upstream schema contains additional independent dimensions or no exact one-to-one event type",
+  "NOT_APPLICABLE": "the UDM event_type already expresses the activity, a dedicated SDM field carries it, or no stable subordinate operation exists",
+  "UNMAPPED": "neither OCSF 1.8.0 nor the reviewed ASIM schemas provide a defensible equivalent",
+  "DEPRECATED": "the UDM value is read-only compatibility and cannot be written by new producers"
+ },
+ "mapping_rules": [
+  {
+   "event_types": [
+    "eventtype_unspecified",
+    "user_stats",
+    "scan_process_behaviors",
+    "email_url_click"
+   ],
+   "status": "DEPRECATED",
+   "operations": [],
+   "sources": []
+  },
+  {
+   "event_types": [
+    "process_launch"
+   ],
+   "status": "FULL",
+   "operations": [
+    "spawn",
+    "fork",
+    "exec"
+   ],
+   "sources": [
+    "ocsf.process_activity.launch_type_id",
+    "asim.ProcessEvent.EventType"
+   ]
+  },
+  {
+   "event_types": [
+    "process_injection"
+   ],
+   "status": "FULL",
+   "operations": [
+    "remote_thread",
+    "load_library",
+    "queue_apc"
+   ],
+   "sources": [
+    "ocsf.process_activity.injection_type_id"
+   ]
+  },
+  {
+   "event_types": [
+    "process_privilege_escalation"
+   ],
+   "status": "PARTIAL",
+   "operations": [
+    "set_user_id",
+    "assume_role"
+   ],
+   "sources": [
+    "ocsf.process_activity",
+    "asim.Authentication.EventSubType"
+   ]
+  },
+  {
+   "event_types": [
+    "file_creation"
+   ],
+   "status": "FULL",
+   "operations": [
+    "upload",
+    "checkin"
+   ],
+   "sources": [
+    "asim.FileEvent.EventSubType"
+   ]
+  },
+  {
+   "event_types": [
+    "file_modification"
+   ],
+   "status": "FULL",
+   "operations": [
+    "checkin",
+    "write"
+   ],
+   "sources": [
+    "asim.FileEvent.EventSubType"
+   ]
+  },
+  {
+   "event_types": [
+    "file_read"
+   ],
+   "status": "FULL",
+   "operations": [
+    "download",
+    "preview",
+    "checkout",
+    "extended"
+   ],
+   "sources": [
+    "asim.FileEvent.EventSubType"
+   ]
+  },
+  {
+   "event_types": [
+    "file_deletion"
+   ],
+   "status": "FULL",
+   "operations": [
+    "recycled",
+    "versions",
+    "site"
+   ],
+   "sources": [
+    "asim.FileEvent.EventSubType"
+   ]
+  },
+  {
+   "event_types": [
+    "user_login"
+   ],
+   "status": "PARTIAL",
+   "operations": [
+    "authentication_ticket",
+    "service_ticket_request",
+    "service_ticket_renew",
+    "preauth",
+    "account_switch",
+    "system",
+    "interactive",
+    "remote_interactive",
+    "service",
+    "remote_service",
+    "remote",
+    "assume_role"
+   ],
+   "sources": [
+    "ocsf.authentication",
+    "asim.Authentication.EventSubType"
+   ]
+  },
+  {
+   "event_types": [
+    "user_logout"
+   ],
+   "status": "FULL",
+   "operations": [
+    "system",
+    "interactive",
+    "remote_interactive",
+    "service",
+    "remote_service",
+    "remote"
+   ],
+   "sources": [
+    "asim.Authentication.EventSubType"
+   ]
+  },
+  {
+   "event_types": [
+    "user_change_permissions"
+   ],
+   "status": "FULL",
+   "operations": [
+    "assign_privileges",
+    "revoke_privileges"
+   ],
+   "sources": [
+    "ocsf.user_access"
+   ]
+  },
+  {
+   "event_types": [
+    "user_resource_creation"
+   ],
+   "status": "FULL",
+   "operations": [
+    "upload"
+   ],
+   "sources": [
+    "ocsf.file_hosting"
+   ]
+  },
+  {
+   "event_types": [
+    "user_resource_update_content"
+   ],
+   "status": "PARTIAL",
+   "operations": [
+    "update",
+    "rename",
+    "copy",
+    "move",
+    "restore",
+    "lock",
+    "unlock",
+    "sync",
+    "unsync"
+   ],
+   "sources": [
+    "ocsf.file_hosting"
+   ]
+  },
+  {
+   "event_types": [
+    "user_resource_update_permissions"
+   ],
+   "status": "FULL",
+   "operations": [
+    "share",
+    "unshare",
+    "access_check"
+   ],
+   "sources": [
+    "ocsf.file_hosting"
+   ]
+  },
+  {
+   "event_types": [
+    "user_resource_access"
+   ],
+   "status": "FULL",
+   "operations": [
+    "download",
+    "preview",
+    "open"
+   ],
+   "sources": [
+    "ocsf.file_hosting"
+   ]
+  },
+  {
+   "event_types": [
+    "network_connection"
+   ],
+   "status": "FULL",
+   "operations": [
+    "open",
+    "close",
+    "reset",
+    "fail",
+    "refuse",
+    "traffic",
+    "listen"
+   ],
+   "sources": [
+    "ocsf.network_activity",
+    "ocsf.ssh_activity",
+    "asim.NetworkSession.EventSubType"
+   ]
+  },
+  {
+   "event_types": [
+    "network_ftp"
+   ],
+   "status": "FULL",
+   "operations": [
+    "put",
+    "get",
+    "poll",
+    "delete",
+    "rename",
+    "list"
+   ],
+   "sources": [
+    "ocsf.ftp_activity"
+   ]
+  },
+  {
+   "event_types": [
+    "network_dhcp"
+   ],
+   "status": "PARTIAL",
+   "operations": [
+    "discover",
+    "offer",
+    "request",
+    "decline",
+    "ack",
+    "nak",
+    "release",
+    "inform",
+    "expire",
+    "assign",
+    "renew",
+    "dns_update"
+   ],
+   "sources": [
+    "ocsf.dhcp_activity",
+    "asim.DHCP.EventType"
+   ]
+  },
+  {
+   "event_types": [
+    "network_dns"
+   ],
+   "status": "FULL",
+   "operations": [
+    "query",
+    "response",
+    "traffic"
+   ],
+   "sources": [
+    "ocsf.dns_activity",
+    "asim.DNS.EventSubType"
+   ]
+  },
+  {
+   "event_types": [
+    "network_smtp",
+    "email_transaction"
+   ],
+   "status": "FULL",
+   "operations": [
+    "send",
+    "receive",
+    "scan",
+    "trace",
+    "mta_relay"
+   ],
+   "sources": [
+    "ocsf.email_activity"
+   ]
+  },
+  {
+   "event_types": [
+    "scan_uncategorized",
+    "scan_file",
+    "scan_process",
+    "scan_host",
+    "scan_vuln_host",
+    "scan_vuln_network",
+    "scan_network"
+   ],
+   "status": "FULL",
+   "operations": [
+    "started",
+    "completed",
+    "cancelled",
+    "duration_violation",
+    "pause_violation",
+    "error",
+    "paused",
+    "resumed",
+    "restarted",
+    "delayed"
+   ],
+   "sources": [
+    "ocsf.scan_activity"
+   ]
+  },
+  {
+   "event_types": [
+    "scheduled_task_uncategorized"
+   ],
+   "status": "PARTIAL",
+   "operations": [
+    "start"
+   ],
+   "sources": [
+    "ocsf.scheduled_job_activity"
+   ]
+  },
+  {
+   "event_types": [
+    "system_audit_log_wipe"
+   ],
+   "status": "FULL",
+   "operations": [
+    "clear",
+    "delete"
+   ],
+   "sources": [
+    "ocsf.event_log_actvity",
+    "asim.Audit.EventType"
+   ]
+  },
+  {
+   "event_types": [
+    "service_creation"
+   ],
+   "status": "PARTIAL",
+   "operations": [
+    "install"
+   ],
+   "sources": [
+    "ocsf.application_lifecycle",
+    "asim.Audit.EventType"
+   ]
+  },
+  {
+   "event_types": [
+    "service_deletion"
+   ],
+   "status": "FULL",
+   "operations": [
+    "remove"
+   ],
+   "sources": [
+    "ocsf.application_lifecycle"
+   ]
+  },
+  {
+   "event_types": [
+    "service_start"
+   ],
+   "status": "PARTIAL",
+   "operations": [
+    "restart"
+   ],
+   "sources": [
+    "ocsf.application_lifecycle"
+   ]
+  },
+  {
+   "event_types": [
+    "service_modification"
+   ],
+   "status": "PARTIAL",
+   "operations": [
+    "enable",
+    "disable",
+    "update"
+   ],
+   "sources": [
+    "ocsf.application_lifecycle",
+    "asim.Audit.EventType"
+   ]
+  },
+  {
+   "event_types": [
+    "group_modification"
+   ],
+   "status": "FULL",
+   "operations": [
+    "assign_privileges",
+    "revoke_privileges",
+    "add_user",
+    "remove_user",
+    "add_subgroup",
+    "remove_subgroup"
+   ],
+   "sources": [
+    "ocsf.group_management",
+    "asim.UserManagement.EventType"
+   ]
+  },
+  {
+   "event_types": [
+    "network_http"
+   ],
+   "status": "NOT_APPLICABLE",
+   "operations": [],
+   "sources": [
+    "ocsf.http_activity",
+    "asim.WebSession.EventType"
+   ],
+   "reason": "HTTP activity is carried by http_method"
+  },
+  {
+   "event_types": [
+    "resource_creation",
+    "resource_deletion",
+    "resource_permissions_change",
+    "resource_read",
+    "resource_written",
+    "process_termination",
+    "process_open",
+    "process_module_load",
+    "registry_creation",
+    "registry_modification",
+    "registry_deletion",
+    "setting_creation",
+    "setting_modification",
+    "setting_deletion",
+    "mutex_creation",
+    "file_copy",
+    "file_open",
+    "file_move",
+    "file_sync",
+    "user_creation",
+    "user_change_password",
+    "user_deletion",
+    "user_resource_deletion",
+    "network_flow",
+    "status_heartbeat",
+    "status_startup",
+    "status_shutdown",
+    "status_update",
+    "scheduled_task_creation",
+    "scheduled_task_deletion",
+    "scheduled_task_enable",
+    "scheduled_task_disable",
+    "scheduled_task_modification",
+    "service_stop",
+    "group_creation",
+    "group_deletion",
+    "analyst_update_verdict",
+    "analyst_update_reputation",
+    "analyst_update_severity_score",
+    "analyst_update_status",
+    "analyst_add_comment",
+    "analyst_update_priority",
+    "analyst_update_root_cause",
+    "analyst_update_reason",
+    "analyst_update_risk_score",
+    "device_firmware_update",
+    "device_config_update",
+    "device_program_upload",
+    "device_program_download",
+    "entity_risk_change",
+    "triage_agent_update_investigation"
+   ],
+   "status": "NOT_APPLICABLE",
+   "operations": [],
+   "sources": [
+    "ocsf.activity_id",
+    "asim.EventType"
+   ],
+   "reason": "event_type already carries the normalized activity and no reviewed subordinate operation adds stable meaning"
+  },
+  {
+   "event_types": [
+    "process_uncategorized",
+    "registry_uncategorized",
+    "setting_uncategorized",
+    "mutex_uncategorized",
+    "file_uncategorized",
+    "user_uncategorized",
+    "user_badge_in",
+    "user_communication",
+    "network_uncategorized",
+    "status_uncategorized",
+    "email_uncategorized",
+    "system_audit_log_uncategorized",
+    "service_unspecified",
+    "group_uncategorized",
+    "generic_event"
+   ],
+   "status": "UNMAPPED",
+   "operations": [],
+   "sources": [],
+   "reason": "no defensible subordinate operation is available without first selecting a more specific event_type"
+  }
+ ]
+}

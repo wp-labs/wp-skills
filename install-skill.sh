@@ -15,7 +15,7 @@ Arguments:
                 Default: install all available skills.
 
 Options:
-  --codex           Install to Codex CLI (~/.codex/skills/)
+  --codex           Install to Codex skills (default: ~/.codex/skills; respects CODEX_HOME)
   --claude          Install to Claude Code (~/.claude/skills/)
   --agents          Install to Zed/Agent skills (~/.agents/skills/)
   --all             Install to Codex, Claude Code, and Agents
@@ -24,6 +24,7 @@ Options:
 Environment:
   WP_SKILLS_REF       Branch or tag to install from (default: main)
   WP_SKILLS_SOURCE    Custom source repo (default: wp-labs/wp-skills)
+  CODEX_HOME          Codex home directory (default: ~/.codex)
 
 Examples:
   $0                       # install all skills (auto-detected platforms)
@@ -42,6 +43,7 @@ EOF
 skill_name=""
 target_dirs=()
 install_all=false
+codex_home="${CODEX_HOME:-$HOME/.codex}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -50,7 +52,7 @@ while [[ $# -gt 0 ]]; do
       exit 0
       ;;
     --codex)
-      target_dirs+=("$HOME/.codex/skills")
+      target_dirs+=("$codex_home/skills")
       shift
       ;;
     --claude)
@@ -67,7 +69,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     --dir)
       if [[ -z "${2:-}" ]]; then
-        echo "Error: --dir requires a path argument" >&2
+        echo "Error: --dir requires a non-empty path argument" >&2
         exit 2
       fi
       target_dirs+=("$2")
@@ -91,6 +93,13 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+# A skill name is also used as a destination path component. Reject separators
+# and traversal components before resolving sources or removing any destination.
+if [[ -n "$skill_name" && ! "$skill_name" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]]; then
+  echo "Error: invalid skill name '$skill_name' (use letters, numbers, '.', '_' or '-')" >&2
+  exit 2
+fi
+
 # Determine repo root
 if [[ -n "${BASH_SOURCE[0]:-}" ]]; then
   repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -110,10 +119,10 @@ trap cleanup EXIT
 if [[ ${#target_dirs[@]} -eq 0 ]]; then
   if [[ "$install_all" == "true" ]]; then
     # --all: publish to every supported platform (directories are created on install)
-    target_dirs+=("$HOME/.codex/skills" "$HOME/.claude/skills" "$HOME/.agents/skills")
+    target_dirs+=("$codex_home/skills" "$HOME/.claude/skills" "$HOME/.agents/skills")
   elif [[ -z "${WP_SKILLS_PLATFORM:-}" ]]; then
     # No explicit target: install to every platform with an existing skills directory
-    [[ -d "$HOME/.codex/skills" ]] && target_dirs+=("$HOME/.codex/skills")
+    [[ -d "$codex_home/skills" ]] && target_dirs+=("$codex_home/skills")
     [[ -d "$HOME/.claude/skills" ]] && target_dirs+=("$HOME/.claude/skills")
     [[ -d "$HOME/.agents/skills" ]] && target_dirs+=("$HOME/.agents/skills")
 
@@ -125,7 +134,7 @@ if [[ ${#target_dirs[@]} -eq 0 ]]; then
     # Respect WP_SKILLS_PLATFORM for backward compatibility
     case "${WP_SKILLS_PLATFORM:-auto}" in
       codex)
-        target_dirs+=("$HOME/.codex/skills")
+        target_dirs+=("$codex_home/skills")
         ;;
       claude-code)
         target_dirs+=("$HOME/.claude/skills")
@@ -136,8 +145,8 @@ if [[ ${#target_dirs[@]} -eq 0 ]]; then
       auto)
         if [[ -d "$HOME/.claude/skills" ]]; then
           target_dirs+=("$HOME/.claude/skills")
-        elif [[ -d "$HOME/.codex/skills" ]]; then
-          target_dirs+=("$HOME/.codex/skills")
+        elif [[ -d "$codex_home/skills" ]]; then
+          target_dirs+=("$codex_home/skills")
         elif [[ -d "$HOME/.agents/skills" ]]; then
           target_dirs+=("$HOME/.agents/skills")
         else
@@ -324,11 +333,13 @@ for i in "${!names[@]}"; do
 
     # Detect platform name for display
     platform="custom"
-    case "$target_base" in
-      */.codex/skills) platform="codex" ;;
-      */.claude/skills) platform="claude-code" ;;
-      */.agents/skills) platform="agents" ;;
-    esac
+    if [[ "$target_base" == "$codex_home/skills" || "$target_base" == */.codex/skills ]]; then
+      platform="codex"
+    elif [[ "$target_base" == */.claude/skills ]]; then
+      platform="claude-code"
+    elif [[ "$target_base" == */.agents/skills ]]; then
+      platform="agents"
+    fi
 
     echo "Installed: $name"
     echo "Platform:  $platform"
