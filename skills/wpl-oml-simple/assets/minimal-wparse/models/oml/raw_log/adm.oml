@@ -1,0 +1,10 @@
+name : raw_log
+rule : raw_log/raw_log
+---
+tenant_id = chars("local-test-tenant");
+__now = Now::time();
+occur_time = pipe @__now | Time::to_ts_ms;
+event_id = read(wp_event_id);
+raw_msg = read(raw);
+raw_msg_digest = read(wp_event_md5);
+digest_algo = chars(md5);

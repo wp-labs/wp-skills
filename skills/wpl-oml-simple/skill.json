@@ -1,0 +1,61 @@
+{
+  "name": "wpl-oml-simple",
+  "version": "6.0.0",
+  "display_name": "WPL/OML 简单版",
+  "description": "项目内无适用 skill 时，从原始日志独立生成 WPL/OML，并用随包最小工程隔离验证",
+  "author": "wp-labs",
+  "license": "MIT",
+  "platforms": [
+    "codex",
+    "claude-code"
+  ],
+  "categories": [
+    "log-parsing",
+    "wpl",
+    "oml",
+    "rule-authoring"
+  ],
+  "triggers": {
+    "keywords": [
+      "WPL",
+      "OML",
+      "WarpParse",
+      "$wpl-oml-simple",
+      "编写 WPL 和 OML 规则"
+    ],
+    "patterns": [
+      "编写.*WPL.*OML",
+      "原始日志.*规则"
+    ]
+  },
+  "dependencies": {
+    "optional": [
+      {
+        "name": "wpadm",
+        "description": "检查工程配置和模型文件；OML 语法仍需由 wparse batch 加载验证"
+      },
+      {
+        "name": "wparse",
+        "description": "WarpParse batch 解析运行时，随 WarpParse 提供"
+      }
+    ]
+  },
+  "resources": {
+    "docs": "https://docs.warpparse.ai",
+    "editor": "https://editor.warpparse.ai",
+    "github": "https://github.com/wp-labs"
+  },
+  "files": {
+    "skill": "SKILL.md",
+    "agents": {
+      "openai": "agents/openai.yaml"
+    },
+    "references": [
+      "references/wpl-oml-syntax.md",
+      "references/new-standard.md",
+      "references/schemas/sdm-event-behavior-kafka.schema.json",
+      "scripts/run_minimal.py",
+      "assets/minimal-wparse"
+    ]
+  }
+}

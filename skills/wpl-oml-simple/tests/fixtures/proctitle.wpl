@@ -1,0 +1,18 @@
+package linux_audit {
+    #[tag(log_desc: "Linux audit PROCTITLE", log_type: "linux_audit_proctitle"), copy_event_parse(rule: "raw_log/raw_log")]
+    rule proctitle {
+        (
+            json(
+                time_timestamp@date,
+                chars@filename,
+                chars@log:audit_log,
+                chars@host_name,
+                ip@host_ip
+            ) | take(audit_log) | json_unescape() | (
+                symbol(type=), chars:record_type,
+                chars:audit_msg | take(audit_msg) | (symbol(msg=audit), chars:audit_id),
+                chars:proctitle_kv | take(proctitle_kv) | (symbol(proctitle=), chars:proctitle_hex)
+            ) | f_chars_has(record_type, PROCTITLE)
+        )
+    }
+}

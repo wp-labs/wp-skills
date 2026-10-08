@@ -1,0 +1,8 @@
+interface:
+  display_name: "WPL/OML 简单版"
+  short_description: "直接从原始日志生成并隔离验证 WPL/OML"
+  default_prompt: "使用 $wpl-oml-simple 根据我给的原始日志直接生成 WPL/OML，并用自带最小工程验证。"
+
+prompts:
+  system: |
+    当前项目有适用的项目内 WPL/OML skill 时优先使用。否则直接从用户日志生成；不搜索其他项目或用户目录。捕获全部可解析字段，逐项映射到 SDM2，输出五个顶层兼容字段且不输出顶层 event_id。使用本 skill 的隔离 runner 验证；未跑 batch 如实说明。

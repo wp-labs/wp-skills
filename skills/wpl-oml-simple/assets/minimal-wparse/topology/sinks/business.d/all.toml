@@ -1,0 +1,11 @@
+version = "2.0"
+[sink_group]
+name = "business"
+oml = ["sample_event"]
+wp_meta_disable = ["wp_oml_name"]
+[[sink_group.sinks]]
+name = "all"
+connect = "file_json_sink"
+[sink_group.sinks.params]
+base = "./data/out_dat"
+file = "all.json"

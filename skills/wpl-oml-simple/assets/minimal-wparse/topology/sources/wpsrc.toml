@@ -1,0 +1,7 @@
+[[sources]]
+key = "sample"
+enable = true
+connect = "file_src"
+[sources.params]
+base = "./data/in_dat"
+file = "sample.dat"

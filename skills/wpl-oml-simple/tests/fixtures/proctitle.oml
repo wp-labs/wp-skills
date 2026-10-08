@@ -1,0 +1,45 @@
+name : linux_audit_proctitle
+rule : linux_audit/proctitle
+---
+__now = Now::time();
+__occur_time = pipe read(date) | Time::to_ts_zone(0, ms);
+meta = object {
+    schema_version = chars("2.0");
+    tenant_id = chars("local-test-tenant");
+    event_id = read(wp_event_id);
+    occur_time = read(__occur_time);
+    ingest_time = pipe @__now | Time::to_ts_ms;
+    parse_time = pipe @__now | Time::to_ts_ms;
+    mapping_id = chars("linux_audit_proctitle_v1");
+    data_source = object { vendor = chars("Linux"); product = chars("auditd"); category = chars(audit); };
+    source_record = object {
+        log_id = read(audit_id);
+        log_type = read(record_type);
+        log_name = read(filename);
+        record_kind = chars(activity);
+    };
+};
+event_kind = chars(behavior);
+behavior = object {
+    layer = chars(system);
+    type = chars(read);
+    operation = chars(process_title_record);
+    outcome = chars(observed);
+    message = chars("Linux audit PROCTITLE record observed");
+};
+carriers : array = array {};
+extensions = object {
+    source_private = object {
+        audit_log = read(audit_log);
+        audit_msg = read(audit_msg);
+        proctitle_kv = read(proctitle_kv);
+        proctitle_hex = read(proctitle_hex);
+        host_name = read(host_name);
+        host_ip = read(host_ip);
+    };
+};
+attacker_entity = chars("");
+victim_entity = chars("");
+attacker_ip = chars("");
+victim_ip = chars("");
+occur_time = read(__occur_time);

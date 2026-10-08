@@ -5,7 +5,7 @@ usage() {
   cat <<EOF
 Usage: $0 [options] [skill-name]
 
-Install skills from the wp-skills / wpl-check repositories into agent skill
+Install skills from the wp-skills repository into agent skill
 directories (Codex, Claude Code, Zed/Agent, or a custom path).
 
 With no skill-name, all available skills are installed.
@@ -30,12 +30,11 @@ Examples:
   $0                       # install all skills (auto-detected platforms)
   $0 --agents              # install all skills to Zed/Agent
   $0 warpparse-log-engineering --claude
-  $0 wpl-rule-check --all
+  $0 wpl-oml-simple --all
   $0 --dir ~/my-skills
 
 Supported skill sources:
-  - wp-skills repo (default): warpparse-log-engineering, etc.
-  - wpl-check repo: wpl-rule-check (auto-detected)
+  - wp-skills repo (default): wp-deploy, wpl-oml-simple
 EOF
 }
 
@@ -197,18 +196,9 @@ resolve_remote_src() {
   local source_repo="${WP_SKILLS_SOURCE:-}"
   local skill_subdir="skills/$name"
 
-  # Auto-detect source repo based on skill name
+  # Skills published by this repository use the same remote source.
   if [[ -z "$source_repo" ]]; then
-    case "$name" in
-      wpl-rule-check)
-        source_repo="wp-labs/wpl-check"
-        skill_subdir="tools/skills/wpl-rule-check"
-        ;;
-      *)
-        source_repo="wp-labs/wp-skills"
-        skill_subdir="skills/$name"
-        ;;
-    esac
+    source_repo="wp-labs/wp-skills"
   fi
 
   if [[ -z "$tmp_root" ]]; then
@@ -303,7 +293,6 @@ else
     else
       collect_remote_dir_skills "wp-labs/wp-skills" "skills"
       collect_remote_dir_skills "wp-labs/wp-skills" "tools/skills"
-      collect_remote_dir_skills "wp-labs/wpl-check" "tools/skills"
     fi
   fi
   if [[ ${#names[@]} -eq 0 ]]; then

@@ -1,0 +1,10 @@
+version = "2.0"
+[sink_group]
+name = "miss"
+oml = []
+[[sink_group.sinks]]
+name = "miss"
+connect = "file_raw_sink"
+[sink_group.sinks.params]
+base = "./data/out_dat"
+file = "miss.dat"

@@ -1,0 +1,1 @@
+{"date":1781755170.0,"filename":"/host/var/log/audit/audit.log","log":"type=PROCTITLE msg=audit(1781755170:1095008): proctitle=6C73","host_name":"ent-rdd-nexus-01","host_ip":"10.168.0.122"}

@@ -1,0 +1,6 @@
+package raw_log {
+    #[no_match]
+    rule raw_log {
+        (chars:raw\0)
+    }
+}
